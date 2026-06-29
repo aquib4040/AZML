@@ -16,7 +16,7 @@ from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.ext_utils.bot_utils import get_readable_time
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
-imdb = Cinemagoer()
+imdb = Cinemagoer(accessSystem='http')
 
 IMDB_GENRE_EMOJI = {
     "Action": "🚀",

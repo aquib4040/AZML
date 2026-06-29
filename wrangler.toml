@@ -1,0 +1,6 @@
+name = "gofile-bypass"
+main = "bygofile.js"
+compatibility_date = "2024-03-24"
+
+# Use this if you want to set custom domains or routes
+# workers_dev = true

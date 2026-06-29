@@ -1,0 +1,52 @@
+version: "3.3"
+
+services:
+
+  # ==========================
+  # Optional VPN (Gluetun)
+  # ==========================
+  #gluetun:
+  #  image: qmcgaw/gluetun:v3.34
+  #  container_name: gluetun
+  #  cap_add:
+  #    - NET_ADMIN
+  #  devices:
+  #    - /dev/net/tun:/dev/net/tun
+  #  environment:
+  #    - VPN_SERVICE_PROVIDER=
+  #    - VPN_TYPE=
+  #    - OPENVPN_USER=
+  #    - OPENVPN_PASSWORD=
+  #    - WIREGUARD_PRIVATE_KEY=
+  #    - WIREGUARD_ADDRESS=
+  #    - WIREGUARD_PUBLIC_KEY=
+  #    - TZ=Asia/Kolkata
+  #    - UPDATER_PERIOD=24h
+  #  ports:
+  #    - "80:80"
+  #    - "8080:8080"
+  #  restart: unless-stopped
+
+  # ==========================
+  # Main APP (Your Leech Bot)
+  # ==========================
+  app:
+    build: .
+    command: bash start.sh
+    restart: unless-stopped
+
+    # If using Gluetun, uncomment:
+    #network_mode: "service:gluetun"
+
+    ports:
+      - "6969:6969"
+      - "8081:8081"
+
+    volumes:
+      - /data/downloads:/usr/src/app/downloads
+
+    environment:
+      - DOWNLOAD_DIR=/usr/src/app/downloads/
+
+    env_file:
+      - .env

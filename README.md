@@ -1,7 +1,7 @@
 <p align="center">
     <a href="https://github.com/utkarshdubey2008/AZML">
         <kbd>
-            <img width="250" src="https://i.ibb.co/Mx2TJns0/file-00000000096c7207a8cef40bc07b65ef.png" alt="AZML-X Logo">
+            <img width="250" src="https://i.ibb.co/Mx2TJns0/file-00000000096c7207a8cef40bc07b65ef.png" alt="AZML Logo">
         </kbd>
     </a>
 </p>
@@ -9,7 +9,7 @@
 <p align="center">
     <i>A Telegram Bot written in Python using the Pyrogram framework for mirroring and leeching files
     from the internet to Google Drive, Telegram, or any RClone-supported cloud storage.
-    Forked and extended from <a href="https://github.com/weebzone/WZML-X">mirror-leech-telegram-bot</a>.</i>
+    Forked and extended from <a href="https://github.com/weebzone/WZML-X">WZML-X</a>.</i>
 </p>
 
 <div align="center">
@@ -30,7 +30,7 @@
 ## Features
 
 <details>
-  <summary><b>Download Engines</b></summary>
+  <summary><b>⬇️ Download Engines</b></summary>
 
 **qBittorrent**
 - File selection before and during download
@@ -49,17 +49,13 @@
 - Embedded thumbnails for leeched files
 - All supported audio format outputs
 
-**Thunder API (Beta)**
-- Fast direct link generation for Telegram files
-- *Note: Thunder API is in beta and currently being tested for personal use. It will soon be available for everyone.*
-
 </details>
 
 <details>
-  <summary><b>Upload Targets</b></summary>
+  <summary><b>☁️ Upload Targets</b></summary>
 
 **Telegram (Leech)**
-- Split files at configurable size thresholds (up to 4GB with premium)
+- Split files at configurable size thresholds (up to 4 GB with premium)
 - Per-user thumbnail, prefix, suffix, rename regex, and document/media toggle
 - Media group support for split file parts
 - Upload to a designated supergroup or channel
@@ -85,21 +81,22 @@
 </details>
 
 <details>
-  <summary><b>Google Drive Operations</b></summary>
+  <summary><b>🔄 Google Drive Operations</b></summary>
 
 - Clone files/folders between drives server-side
 - Count files and folders in a Drive path
 - Search across multiple folders and TeamDrives
 - Recursive search on root and TeamDrive IDs
 - Fallback from Service Account to `token.pickle` on failure
+- **GDrive Clean** — bulk delete or move to trash all files inside a Drive folder (owner-only, with confirmation prompt)
 
 </details>
 
 <details>
-  <summary><b>Torrent</b></summary>
+  <summary><b>🌀 Torrent</b></summary>
 
 - Torrent search via API and qBittorrent search plugins
-- Cached magnet support via real-debrid API
+- Cached magnet support via Real-Debrid API
 - Multi-tracker support
 - Per-task rename via `-n` flag — works with magnet links and `.torrent` files, inline or by reply
 - Auto rename applies to every file in a batch torrent independently
@@ -107,7 +104,7 @@
 </details>
 
 <details>
-  <summary><b>Archive Handling</b></summary>
+  <summary><b>📦 Archive Handling</b></summary>
 
 - Extraction via 7-zip: RAR, ZIP, 7z, ISO, TAR, and split archives
 - Password-protected archive extraction and creation
@@ -117,7 +114,7 @@
 </details>
 
 <details>
-  <summary><b>RSS</b></summary>
+  <summary><b>📰 RSS</b></summary>
 
 - RSS feed monitoring with filters
 - Per-user feeds with tag support
@@ -127,7 +124,7 @@
 </details>
 
 <details>
-  <summary><b>Database & Storage</b></summary>
+  <summary><b>🗄️ Database & Storage</b></summary>
 
 - MongoDB backend for persistent state
 - Per-user settings, thumbnails, and rclone configs stored in DB
@@ -137,20 +134,348 @@
 </details>
 
 <details>
-  <summary><b>Overall</b></summary>
+  <summary><b>🔍 Media Info & Scraper</b></summary>
+
+**MediaInfo (`/mediainfo`, `/mi`)**
+- Generate full MediaInfo report from a Telegram file or direct download link
+- Supports video, audio, document, voice, animation, and video notes
+- Output posted to Telegraph for easy sharing
+
+**Universal Scraper (`/scrape`, `/sc`)**
+- Extract metadata and download links from streaming platforms and social media
+- Supports 30+ platforms including Zee5, YouTube, Crunchyroll, and more
+- Auto-detects platform from URL
+- Returns title, type, year, duration, quality, thumbnail, landscape/poster, and download links
+
+</details>
+
+<details>
+  <summary><b>🎭 Anime, IMDB & Drama Lookup</b></summary>
+
+**AniList (`/anime`)**
+- Search anime and manga via AniList GraphQL API
+- Returns title (romaji, English, native), format, status, score, episodes, genres, studios, and synopsis
+- Inline pagination for multiple results
+- Manga chapter/volume data included
+
+**IMDB (`/imdb`)**
+- Search movies and TV shows via IMDb (Cinemagoer)
+- Returns title, year, rating, genres, cast, directors, plot summary, and poster
+- Genre-to-emoji mapping for visual output
+- Inline pagination for multiple results
+
+**MyDramaList (`/mdl`)**
+- Search Korean dramas and Asian content via MyDramaList API
+- Returns title, year, rating, genres, cast, and synopsis
+- Inline pagination
+
+**Crunchyroll Poster (`/cr`)**
+- Fetch landscape and portrait poster/backdrop links for any Crunchyroll series by URL
+- No login required (uses public client token)
+
+</details>
+
+<details>
+  <summary><b>🏎️ Speedtest</b></summary>
+
+- Run a server speedtest directly from the bot (`/speedtest`, `/sp`)
+- Reports upload speed, download speed, ping, data sent/received
+- Includes ISP info, geolocation, and server details
+- Result image shared automatically
+
+</details>
+
+<details>
+  <summary><b>🔑 Session Generator</b></summary>
+
+- Generate a Pyrogram string session via guided bot conversation in PM (`/genss`)
+- Supports phone and bot account session generation
+- Encrypted session output for security
+- Works with 2FA (password) accounts
+
+</details>
+
+<details>
+  <summary><b>📢 Broadcast</b></summary>
+
+- Send a message to all bot users stored in DB (`/broadcast`, `/bc`)
+- Supports forward mode (`-f`), quiet mode (`-q`), edit (`-e`), and delete (`-d`) by broadcast ID
+- Flood-wait aware with skip logic for blocked/deactivated accounts
+
+</details>
+
+<details>
+  <summary><b>🖼️ Image Management</b></summary>
+
+- Add images to the bot's rotation pool (`/addimg`) via Telegram photo reply or direct link
+- View all stored images (`/images`)
+- Bot uses stored images as rotating backgrounds for status and start messages
+- Auto image search via `IMG_SEARCH` config to auto-populate the pool from wallpaper sites
+
+</details>
+
+<details>
+  <summary><b>📁 Category / Drive Selection</b></summary>
+
+- Per-task Google Drive category selection before upload
+- Users can choose from pre-configured categories (each with its own Drive ID and index URL)
+- Configurable per-user default upload category via `/usetting`
+- Supports custom Drive ID (`-id`) and index URL (`-index`) flags per task
+
+</details>
+
+<details>
+  <summary><b>⚙️ User Settings (`/usetting`)</b></summary>
+
+- **Leech Settings**: prefix, suffix, caption, regex rename, media/document toggle, split size, equal splits, media group
+- **Auto Rename**: template-based rename with `{title}`, `{season}`, `{episode}`, `{chapter}`, `{quality}`, `{audio}` tags
+- **Regex Rename**: legacy find-and-replace rename (runs before template)
+- **Thumbnail**: set/clear a persistent custom thumbnail applied to all leeched files
+- **RClone Config**: per-user `rclone.conf` upload and management
+- **Google Drive**: per-user Drive ID, index URL, TeamDrive toggle
+- **Intro Subtitles**: text overlay, duration, font size, position, styling — burned into video via FFmpeg
+- **Personal Bot**: connect a personal Telegram bot token for isolated leeching
+- **Personal Dump**: set a personal channel/group for dump uploads
+- **yt-dlp Options**: per-user custom yt-dlp flags
+
+</details>
+
+<details>
+  <summary><b>🌐 Overall</b></summary>
 
 - Docker image support: `amd64`, `arm64/v8`, `arm/v7`
-- Fully async (Pyrogram-based)
+- Fully async (Pyrogram-based, uvloop-accelerated)
 - Live variable editing and private file overwrite without restart
 - Auto-update from `UPSTREAM_REPO` on restart
 - Queue system for concurrent download/upload slots
 - Per-user and global task limits (size, count, type)
 - Bulk download from `.txt` file or newline-separated message
 - Force subscribe to channels/groups before bot usage
-- Token-based access control with configurable timeout
-- Shell executor and bot log access for sudo users
-- Bot theming support (`minimal` and custom)
-- Telegraph integration for Drive listings
+- Token-based access control with configurable timeout and permanent passphrase login
+- Shell executor (`/shell`), Python eval (`/eval`), and bot log access for sudo users
+- Bot theming support (`minimal` and custom via `BotTheme`)
+- Telegraph integration for Drive listings and MediaInfo
+- Topic/thread-level authorization for supergroups
+- Authorize, unauthorize, blacklist, and sudo management commands
+- Safe mode — strip filenames/links from group chat, send only to PM
+- Screenshots mode — generate video screenshots via `-ss` argument
+- Save button and Source button toggles on file output
+
+</details>
+
+---
+
+## Exclusive Features
+
+---
+
+### Auto Rename & Smart Metadata Extraction
+
+Auto rename is a template-driven renaming system that extracts structured metadata directly from filenames before upload. It reads the title, season, episode, chapter, quality, and audio track from the raw filename and renames the file according to a pattern you define. It can be toggled on or off per user from the user settings panel (`/usetting`).
+
+When auto rename is active, every file passing through the bot — whether from a direct link, torrent, Telegram file, or extracted archive — is renamed automatically before it hits the upload pipeline. No manual intervention needed.
+
+<details>
+  <summary><b>Template Tags</b></summary>
+
+| Tag | What It Extracts |
+|---|---|
+| `{title}` | The show or file title, cleaned of noise like quality tags, group names, and codec strings |
+| `{season}` | Season number (e.g. `01`, `02`) |
+| `{episode}` | Episode number (e.g. `05`, `12`) |
+| `{chapter}` | Chapter number, zero-padded to 3 digits (e.g. `001`, `045`, `140`) |
+| `{quality}` | Video quality string (e.g. `1080p`, `720p`, `HDRip`) |
+| `{audio}` | Audio language or type tag — used in captions to indicate dub, sub, or multi-audio |
+
+Template examples:
+
+```
+{title} - S{season}E{episode} [{quality}]
+{title} S{season}E{episode} {audio}
+{title} - Chapter {chapter}.pdf
+[{chapter}] {title}.pdf
+Ch-{chapter} - {title}.pdf
+```
+
+</details>
+
+<details>
+  <summary><b>Title Extraction & Quality Auto-Detection</b></summary>
+
+The extractor strips known noise from the filename — quality markers, resolution strings, codec identifiers, release group tags, site watermarks — and returns the clean content title. It handles anime, manga, manhwa, live-action, and generic files consistently.
+
+```
+[S01-E03] Takamine San [1080p][x264]        →  Takamine San
+[CH-140] Infinite Mage - AnimeDynasty.pdf   →  Infinite Mage
+Attack.on.Titan.S04E28.1080p.WEB.mkv        →  Attack on Titan
+[SubsPlease] Frieren - 16 (1080p).mkv       →  Frieren
+```
+
+If `{quality}` is in the template but no quality string is detected, the extractor falls back to a file-size check. Any file over **500 MB** without a detected quality tag automatically receives `HDRip` as the quality value.
+
+</details>
+
+<details>
+  <summary><b>Chapter Detection</b></summary>
+
+Chapters are zero-padded to 3 digits. The extractor recognises a wide range of release naming conventions including Japanese numerals:
+
+```
+[CH-140] Blue Lock.pdf            →  140
+[CH 58] One Piece.pdf             →  058
+[059] Solo Leveling.pdf           →  059
+Ch-123 My Hero Academia.pdf       →  123
+[C576] Lookism @Manga_Cruise.pdf  →  576
+#88 Naruto.pdf                    →  088
+Ep-19 Demon Slayer.pdf            →  019
+Vol2 Attack on Titan.pdf          →  002
+Part 4 JoJo.pdf                   →  004
+第233話 One Piece.pdf              →  233
+Chap 90 Spy Family.pdf            →  090
+Book 3 Mushoku Tensei.pdf         →  003
+E120 Bleach.pdf                   →  120
+S01E13 Classroom of the Elite     →  013
+364 END Berserk.pdf               →  364
+456 Final Tokyo Ghoul.pdf         →  456
+c 789 Black Clover.pdf            →  789
+Ch1234 One Punch Man.pdf          →  1234
+C 25 Hunter x Hunter.pdf          →  025
+Episode 12 Chainsaw Man.pdf       →  012
+```
+
+</details>
+
+<details>
+  <summary><b>Regex Rename (Legacy)</b></summary>
+
+The older find-and-replace rename system based on regex patterns continues to work alongside the template system. Configure a regex pattern and a replacement string separately in `/usetting`. Both coexist — regex rename runs first on the raw filename, and then the template is applied to the result if auto rename is enabled.
+
+</details>
+
+<details>
+  <summary><b>Batch Torrents & Archive Extraction</b></summary>
+
+When a torrent contains multiple files, auto rename processes each file independently. Metadata is extracted per file, not per torrent — so a batch release with 12 episodes or 20 chapters will have every individual file renamed based on its own filename.
+
+Auto rename also runs as a post-extraction step. When a ZIP, RAR, 7z, or split archive is extracted, every resulting file is passed through the full rename pipeline before upload.
+
+</details>
+
+---
+
+### Per-Task Manual Filename Override (`-n`)
+
+The `-n` flag lets you force a specific output filename for any single task, bypassing auto rename entirely. No metadata extraction, no template substitution, no regex processing — it is a hard per-task override.
+
+<details>
+  <summary><b>Usage Examples</b></summary>
+
+Inline with a URL:
+```
+/command https://example.com/file.mkv -n Filename.mkv
+```
+
+By replying to a file:
+```
+/command -n Filename.mkv
+```
+
+With direct links:
+```
+/command https://files.example.com/release.zip -n ShowName.S01E04.1080p.mkv
+/command https://cdn.example.org/manga-ch140.pdf -n [CH-140] Blue Lock.pdf
+```
+
+With torrents (single-file sets filename, multi-file sets root folder name):
+```
+/command magnet:?xt=urn:btih:HASH&dn=... -n ShowName.S02E05.mkv
+/command -n ShowName.S02E05.mkv
+```
+
+With Telegram files (reply to any document, video, or audio):
+```
+/command -n CleanName.mp4
+/command -n [CH-140] Blue Lock.pdf
+```
+
+</details>
+
+---
+
+### Custom Leech Thumbnail (`/t`)
+
+Each user can set a persistent custom thumbnail applied to every file they leech. Stored per-user in the database — works across sessions without re-setting.
+
+<details>
+  <summary><b>Usage</b></summary>
+
+Reply to any photo in Telegram with either command:
+```
+/t
+/thumbnail
+```
+
+Both are identical. The photo you replied to is saved as your thumbnail. To clear or change it, go to `/usetting` → Thumbnail.
+
+Once set, the thumbnail is applied to all leeched output — videos, documents, audio files, and every part of a split upload.
+
+</details>
+
+---
+
+### Intro Subtitles
+
+Intro subtitles let you burn a text overlay into the opening seconds of a video during the leech process, before the file is sent to Telegram. The overlay is rendered via FFmpeg and embedded directly into the video stream — not as a separate subtitle track.
+
+<details>
+  <summary><b>Details</b></summary>
+
+- Appears for a configured duration at the start of the video, then disappears
+- Useful for adding a channel name, group tag, or attribution watermark as a brief bumper
+- Configuration — text content, display duration in seconds, font size, position, and styling — is managed through `/usetting`
+- Does not re-encode the entire file; only the intro segment is processed
+
+</details>
+
+---
+
+### GDrive Clean (`/gdclean`, `/gc`)
+
+Owner-only command to bulk delete or trash all files inside a Google Drive folder.
+
+<details>
+  <summary><b>Details</b></summary>
+
+- Accepts a Drive folder link inline or as a reply
+- Defaults to the configured `GDRIVE_ID` if no link provided
+- Shows folder name, size, file count, and folder count before acting
+- Two options: **Move to Bin** (restorable) or **Permanent Clean** (irreversible)
+- Folder itself is never deleted — only the files inside
+- Confirmation buttons prevent accidental execution
+
+</details>
+
+---
+
+### Personal Bot & Personal Dump
+
+<details>
+  <summary><b>Personal Bot</b></summary>
+
+- Each user can connect their own Telegram bot token via `/usetting` → Personal Bot
+- Leeched files are sent through the user's personal bot instead of the main bot
+- Provides isolation — files appear from a different bot identity
+- Verification step ensures the token and bot are valid before saving
+
+</details>
+
+<details>
+  <summary><b>Personal Dump</b></summary>
+
+- Each user can configure a personal channel or group as their dump destination via `/usetting` → Personal Dump
+- All leeched files go to the dump channel/group automatically
+- Supports channel IDs and usernames
+- Verification checks that the bot (or user bot) has send permissions in the target
 
 </details>
 
@@ -213,172 +538,139 @@ sudo docker image prune -a
 
 ## Bot Commands
 
-> All commands support a configurable `CMD_SUFFIX`. With suffix `x`, `/leech` becomes `/leechx`. The names listed below are defaults — use whatever trigger your instance exposes.
+> All commands support a configurable `CMD_SUFFIX`. With suffix `x`, `/leech` becomes `/leechx`. The names listed below are defaults.
+
+<details>
+  <summary><b>Mirror & Leech</b></summary>
 
 ```
 mirror        - Mirror a link or file to Drive/Cloud
+m             - Alias for /mirror
 qbmirror      - Mirror torrent via qBittorrent
-leech         - Leech a link or file to Telegram
-qbleech       - Leech torrent via qBittorrent
+qm            - Alias for /qbmirror
 ytdl          - Mirror a yt-dlp supported link
+y             - Alias for /ytdl
+leech         - Leech a link or file to Telegram
+l             - Alias for /leech
+qbleech       - Leech torrent via qBittorrent
+ql            - Alias for /qbleech
 ytdlleech     - Leech a yt-dlp supported link
+yl            - Alias for /ytdlleech
+```
+
+</details>
+
+<details>
+  <summary><b>Google Drive</b></summary>
+
+```
 clone         - Clone a Drive file/folder
+c             - Alias for /clone
 count         - Count items in a Drive path
 del           - Delete a Drive file/folder
 list          - Search Drive for files
+gdclean       - Bulk delete/trash files in a Drive folder (owner only)
+gc            - Alias for /gdclean
+```
+
+</details>
+
+<details>
+  <summary><b>Torrent & Search</b></summary>
+
+```
 search        - Search torrents via API
-status        - View active task status
 btsel         - Select files from a torrent
-rss           - Open RSS feed menu
-usetting      - User settings panel
-bsetting      - Bot settings panel
+```
+
+</details>
+
+<details>
+  <summary><b>Status & Tasks</b></summary>
+
+```
+status        - View active task status
+s             - Alias for /status
+statusall     - Global status (all bots)
 cancel        - Cancel a specific task
 cancelall     - Cancel all active tasks
-ar            - Set/view AutoRename template directly
+cancellallbot - Cancel all tasks (multi-bot)
+```
+
+</details>
+
+<details>
+  <summary><b>User Tools</b></summary>
+
+```
+usetting      - User settings panel
+us            - Alias for /usetting
 t             - Set leech thumbnail (reply to a photo)
+thumbnail     - Alias for /t
+rss           - Open RSS feed menu
+autorename    - Quick auto rename toggle/template set
+ar            - Alias for /autorename
+login         - Login with permanent passphrase
+```
+
+</details>
+
+<details>
+  <summary><b>Info & Media</b></summary>
+
+```
+imdb          - Search IMDB for movies/shows
+anime         - Search AniList for anime/manga
+mdl           - Search MyDramaList for dramas
+mediainfo     - Generate MediaInfo for a file or link
+mi            - Alias for /mediainfo
+scrape        - Universal platform scraper
+sc            - Alias for /scrape
+cr            - Fetch Crunchyroll series posters
+speedtest     - Run a server speedtest
+sp            - Alias for /speedtest
+```
+
+</details>
+
+<details>
+  <summary><b>Admin & Sudo</b></summary>
+
+```
+bsetting      - Bot settings panel
+bs            - Alias for /bsetting
+authorize     - Authorize a user or chat
+a             - Alias for /authorize
+unauthorize   - Unauthorize a user or chat
+ua            - Alias for /unauthorize
+blacklist     - Blacklist a user
+bl            - Alias for /blacklist
+rmblacklist   - Remove user from blacklist
+rbl           - Alias for /rmblacklist
+addsudo       - Add a sudo user
+rmsudo        - Remove a sudo user
+users         - List all authorized users
+broadcast     - Broadcast a message to all users
+bc            - Alias for /broadcast
+addimg        - Add an image to the bot's rotation pool
+images        - View all stored images
 log           - Fetch bot log
 shell         - Execute a shell command
+eval          - Evaluate Python code
+exec          - Execute Python code (exec)
+clearlocals   - Clear eval/exec local variables
 restart       - Restart the bot
+r             - Alias for /restart
+restartall    - Restart all bots
 stats         - Bot resource usage stats
+st            - Alias for /stats
 ping          - Check bot responsiveness
+p             - Alias for /ping
 help          - List all commands with descriptions
+genss         - Generate a Pyrogram string session
 ```
 
----
-
-## Exclusive Features
-
----
-
-### Auto Rename & Smart Metadata Extraction (`/ar`)
-
-Auto rename is a template-driven renaming system that extracts structured metadata directly from filenames before upload. It reads the title, season, episode, chapter, quality, and audio track from the raw filename and renames the file according to a template pattern you define.
-
-You can toggle it on or off or configure it from the user settings panel (`/usetting`), or interact with it directly using the `/ar` or `/autorename` command.
-
-#### Command Usage
-
-- `/{ar|autorename} [template]` — Saves the template string for auto-renaming.
-- `/{ar|autorename}` — Shows your current saved template and a list of available tags.
-- `/{ar|autorename} off` (or `clear`/`reset`/`del`/`none`) — Clears and disables the AutoRename template.
-
-#### Template Tags
-
-| Tag | What It Extracts |
-|---|---|
-| `{title}` | The show or file title, cleaned of noise like quality tags, group names, and codec strings |
-| `{season}` | Season number (e.g. `01`, `02`) |
-| `{episode}` | Episode number (e.g. `05`, `12`) |
-| `{episode:+N}` | Episode with a custom offset `N` |
-| `{quality}` | Video quality string (e.g. `1080p`, `720p`, `HDRip`) |
-| `{codec}` | Video codec (e.g. `x265`, `x264`, `h264`) |
-| `{audio}` | Audio language or type tag |
-| `{chapter}` | Chapter number, zero-padded to 3 digits (e.g. `001`, `045`, `140`) |
-
-#### Template Examples
-
-```
-{title} - S{season}E{episode} [{quality}]
-{title} S{season}E{episode} {audio}
-{title} - Chapter {chapter}.pdf
-[{chapter}] {title}.pdf
-```
-
-#### How Title Extraction Works
-
-The extractor strips known noise from the filename — quality markers, resolution strings, codec identifiers, release group tags, site watermarks — and returns the clean content title. It handles anime, manga, manhwa, live-action, and generic files consistently.
-
-```
-[S01-E03] Takamine San [1080p][x264]        →  Takamine San
-[CH-140] Infinite Mage - AnimeDynasty.pdf   →  Infinite Mage
-Attack.on.Titan.S04E28.1080p.WEB.mkv        →  Attack on Titan
-[SubsPlease] Frieren - 16 (1080p).mkv       →  Frieren
-```
-
-#### Quality Auto-Detection
-
-If `{quality}` is in the template but no quality string is detected in the filename, the extractor falls back to a file size check. Any file over **500 MB** without a detected quality tag automatically receives `HDRip` as the quality value. This prevents blank or malformed filenames for unlabelled rips.
-
-#### Chapter Detection
-
-Chapters are zero-padded to 3 digits. The extractor recognises a wide range of release naming conventions used across manga, manhwa, light novels, and anime — including Japanese numerals.
-
----
-
-### Custom Leech Thumbnail (`/t`)
-
-Each user can set a persistent custom thumbnail that gets applied to every file they leech. The thumbnail is stored per-user in the database and used automatically from that point forward.
-
-#### Command Usage
-
-- `/t` or `/thumb` (reply to a photo) — Saves the photo as your persistent custom thumbnail.
-- To view or clear your thumbnail, navigate to `/usetting` → Leech → Custom Thumbnail.
-
-Once set, the thumbnail is applied to all leeched output — videos, documents, audio files, and every part of a split upload all carry it. It works on top of per-user settings, so different users in the same bot can each have their own thumbnail independently.
-
----
-
-### Per-Task Manual Filename Override (`-n`)
-
-The `-n` flag lets you force a specific output filename for any single task, bypassing auto rename entirely. When `-n` is used, the file is uploaded with exactly the name you provide — no metadata extraction, no template substitution, no regex processing. It is a hard per-task override.
-
-This is the correct approach when you already know the exact output filename and do not want the rename system involved at all.
-
-#### Basic Syntax
-
-Inline with a URL — send the command with the link and the flag in the same message:
-
-```
-/command https://example.com/file.mkv -n Filename.mkv
-```
-
-By replying to a file, Telegram message, or torrent — send the command as a reply with just the flag:
-
-```
-/command -n Filename.mkv
-```
-
-Since command names depend on your `CMD_SUFFIX` configuration, `/command` is used here as a placeholder. `/leech` and `/l` refer to the same command — use whichever your deployment exposes.
-
-#### With Direct Download Links
-
-```
-/command https://files.example.com/release.zip -n ShowName.S01E04.1080p.mkv
-/command https://cdn.example.org/manga-ch140.pdf -n [CH-140] Blue Lock.pdf
-/command https://example.com/archive.zip -n dataset.zip
-```
-
-#### With Torrents
-
-Works identically with magnet links or `.torrent` files, whether sent inline or by replying to a torrent file already in chat:
-
-```
-/command magnet:?xt=urn:btih:HASH&dn=... -n ShowName.S02E05.mkv
-/command -n ShowName.S02E05.mkv
-```
-
-The second example above is sent as a reply to a `.torrent` file. For single-file torrents, `-n` sets the output filename directly. For multi-file batch torrents, `-n` sets the name of the torrent's root folder rather than the individual files inside it — individual file naming within a batch is handled by the auto rename template.
-
-#### With Telegram Files
-
-Reply to any file already in Telegram — document, video, audio — and rename it before upload:
-
-```
-/command -n CleanName.mp4
-/command -n [CH-140] Blue Lock.pdf
-```
-
-The renamed file is uploaded to Telegram (or Drive/cloud depending on your configured upload target) with exactly that name.
-
----
-
-### Intro Subtitles
-
-Intro subtitles let you burn a text overlay into the opening seconds of a video during the leech process, before the file is sent to Telegram. The overlay is rendered via FFmpeg at upload time and is embedded directly into the video stream — not as a separate subtitle track.
-
-The subtitle appears for a configured duration at the start of the video and then disappears. The rest of the video beyond that window is completely untouched. This is useful for adding a channel name, group tag, or attribution watermark as a brief bumper without re-encoding the entire file or modifying the source.
-
-Configuration — the text content, display duration in seconds, font size, position, and styling — is managed through the user settings panel (`/usetting`).
+</details>
 
 ---
 
@@ -562,7 +854,6 @@ Configuration — the text content, display duration in seconds, font size, posi
 | `FILELION_API` | `str` | Filelions API key |
 | `GDTOT_CRYPT` | `str` | GDTot cookie for link bypass |
 | `JIODRIVE_TOKEN` | `str` | JioDrive bypass token |
-| `THUNDER_API` | `str` | Base URL of Thunder API (Beta, currently testing for self, soon available for all) |
 
 </details>
 
@@ -628,22 +919,19 @@ Supported sites via API: 1337x, Piratebay, Nyaasi, Torlock, Torrent Galaxy, Zooq
 
 ## Credits
 
-- **Base Repository**: [WZML](https://github.com/weebzone/WZML) by [wzml](https://github.com/weebzone) — core architecture, feature design, and original implementation.
-- **Foundation**: [mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot) by anasty17
-- **Origin**: [python-aria-mirror-bot](https://github.com/lzzy12/python-aria-mirror-bot) by lzzy12
-- **Drive Search**: [searchX-bot](https://github.com/SVR666) by Sreeraj
-- **Telegraph**: [loaderX-bot](https://github.com/SVR666) by Sreeraj
-- **RSS**: [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan) by hyPnOtICDo0g
+- **Base Repository**: [WZML](https://github.com/weebzone/WZML) by [Weebzone](https://github.com/weebzone) — core architecture, feature design, and original implementation.
+- **Original Creator**: [Utkarsh](https://github.com/utkarshdubey2008)
+- **Lead Contributor & Maintainer**: [Aquib](https://github.com/aquib4040)
 
 ---
 
 ## Authors
 
-| | | |
-|:---:|:---:|:---:|
-| <img width="80" src="https://avatars.githubusercontent.com/u/105407900"> | <img width="80" src="https://avatars.githubusercontent.com/u/113664541"> | <img width="80" src="https://avatars.githubusercontent.com/u/84721324"> |
-| [`SilentDemonSD`](https://github.com/SilentDemonSD) | [`CodeWithWeeb`](https://github.com/weebzone) | [`Maverick`](https://github.com/MajnuRangeela) |
-| Author — DDL, UI Design, Custom Modules | Author — Feature Integration | Co-Author & QA |
+| | |
+|:---:|:---:|
+| <img width="80" src="https://avatars.githubusercontent.com/u/97157730?v=4"> | <img width="80" src="https://avatars.githubusercontent.com/u/200465492?v=4"> |
+| [`Utkarsh`](https://github.com/utkarshdubey2008) | [`Aquib`](https://github.com/aquib4040) |
+| Original Creator [AZML] | Lead Contributor & Maintainer |
 
 ---
 

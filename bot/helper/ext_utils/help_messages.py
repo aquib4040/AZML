@@ -437,6 +437,7 @@ For the password, you can use a space!
 
 default_desp = {
     "AS_DOCUMENT": "Default type of Telegram file upload. Default is False mean as media.",
+    "NYAA_PROXY": "Redirect all nyaa.si requests to nyaa.koyeb.app internally. Default is False.",
     "ANIME_TEMPLATE": "Set template for AniList Template. HTML Tags supported",
     "AUTHORIZED_CHATS": "Fill user_id and chat_id of groups/users you want to authorize. Separate them by space.",
     "AUTO_DELETE_MESSAGE_DURATION": "Interval of time (in seconds), after which the bot deletes it's message and command message which is expected to be viewed instantly.\n\n <b>NOTE:</b> Set to -1 to disable auto message deletion.",

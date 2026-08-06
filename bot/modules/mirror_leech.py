@@ -393,6 +393,8 @@ async def _mirror_leech(
 
     org_link = None
     if link:
+        if config_dict.get("NYAA_PROXY") and "nyaa.si" in link:
+            link = link.replace("nyaa.si", "nyaa.koyeb.app")
         LOGGER.info(link)
         org_link = link
 

@@ -76,6 +76,7 @@ default_values = {
     "GD_INFO": "Uploaded by WZML-X",
     "TMDB_ACCESS_TOKEN": "",
     "AUTO_THUMBNAIL": False,
+    "NYAA_PROXY": False,
 }
 bool_vars = [
     "AS_DOCUMENT",
@@ -99,6 +100,7 @@ bool_vars = [
     "UPGRADE_PACKAGES",
     "SCREENSHOTS_MODE",
     "AUTO_THUMBNAIL",
+    "NYAA_PROXY",
 ]
 
 
@@ -590,6 +592,9 @@ async def load_config():
     AUTO_THUMBNAIL = environ.get("AUTO_THUMBNAIL", "")
     AUTO_THUMBNAIL = AUTO_THUMBNAIL.lower() == "true"
 
+    NYAA_PROXY = environ.get("NYAA_PROXY", "")
+    NYAA_PROXY = NYAA_PROXY.lower() == "true"
+
     DEF_ANI_TEMP = environ.get("ANIME_TEMPLATE", "")
     if len(DEF_ANI_TEMP) == 0:
         DEF_ANI_TEMP = """<b>{ro_title}</b>({na_title})
@@ -794,6 +799,7 @@ async def load_config():
             "THUNDER_API": THUNDER_API,
             "TMDB_ACCESS_TOKEN": TMDB_ACCESS_TOKEN,
             "AUTO_THUMBNAIL": AUTO_THUMBNAIL,
+            "NYAA_PROXY": NYAA_PROXY,
         }
     )
 

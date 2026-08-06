@@ -90,6 +90,8 @@ async def rssSub(client, message, pre_event):
             )
             continue
         feed_link = args[1].strip()
+        if config_dict.get("NYAA_PROXY") and "nyaa.si" in feed_link:
+            feed_link = feed_link.replace("nyaa.si", "nyaa.koyeb.app")
         if feed_link.startswith(("-inf", "-exf", "-c")):
             await sendMessage(
                 message,
@@ -312,8 +314,11 @@ async def rssGet(client, message, pre_event):
                 msg = await sendMessage(
                     message, f"Getting the last <b>{count}</b> item(s) from {title}"
                 )
+                link = data["link"]
+                if config_dict.get("NYAA_PROXY") and "nyaa.si" in link:
+                    link = link.replace("nyaa.si", "nyaa.koyeb.app")
                 async with ClientSession(trust_env=True) as session:
-                    async with session.get(data["link"]) as res:
+                    async with session.get(link) as res:
                         html = await res.text()
                 rss_d = feedparse(html)
                 item_info = ""
@@ -634,14 +639,19 @@ async def rssMonitor():
             try:
                 if data["paused"]:
                     continue
+                link = data["link"]
+                if config_dict.get("NYAA_PROXY") and "nyaa.si" in link:
+                    link = link.replace("nyaa.si", "nyaa.koyeb.app")
                 async with ClientSession(trust_env=True) as session:
-                    async with session.get(data["link"]) as res:
+                    async with session.get(link) as res:
                         html = await res.text()
                 rss_d = feedparse(html)
                 try:
                     last_link = rss_d.entries[0]["links"][1]["href"]
                 except IndexError:
                     last_link = rss_d.entries[0]["link"]
+                if config_dict.get("NYAA_PROXY") and last_link and "nyaa.si" in last_link:
+                    last_link = last_link.replace("nyaa.si", "nyaa.koyeb.app")
                 finally:
                     all_paused = False
                 last_title = rss_d.entries[0]["title"]
@@ -659,6 +669,8 @@ async def rssMonitor():
                             url = rss_d.entries[feed_count]["links"][1]["href"]
                         except IndexError:
                             url = rss_d.entries[feed_count]["link"]
+                        if config_dict.get("NYAA_PROXY") and url and "nyaa.si" in url:
+                            url = url.replace("nyaa.si", "nyaa.koyeb.app")
                         if data["last_feed"] == url or data["last_title"] == item_title:
                             break
                     except IndexError:

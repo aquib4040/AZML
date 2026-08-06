@@ -647,6 +647,9 @@ TMDB_ACCESS_TOKEN = environ.get("TMDB_ACCESS_TOKEN", "")
 AUTO_THUMBNAIL = environ.get("AUTO_THUMBNAIL", "")
 AUTO_THUMBNAIL = AUTO_THUMBNAIL.lower() == "true"
 
+NYAA_PROXY = environ.get("NYAA_PROXY", "")
+NYAA_PROXY = NYAA_PROXY.lower() == "true"
+
 config_dict = {
     "ANIME_TEMPLATE": ANIME_TEMPLATE,
     "AS_DOCUMENT": AS_DOCUMENT,
@@ -763,6 +766,7 @@ config_dict = {
     "THUNDER_API": THUNDER_API,
     "TMDB_ACCESS_TOKEN": TMDB_ACCESS_TOKEN,
     "AUTO_THUMBNAIL": AUTO_THUMBNAIL,
+    "NYAA_PROXY": NYAA_PROXY,
 }
 
 if GDRIVE_ID:

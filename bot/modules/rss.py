@@ -650,10 +650,10 @@ async def rssMonitor():
                     last_link = rss_d.entries[0]["links"][1]["href"]
                 except IndexError:
                     last_link = rss_d.entries[0]["link"]
-                if config_dict.get("NYAA_PROXY") and last_link and "nyaa.si" in last_link:
-                    last_link = last_link.replace("nyaa.si", "nyaa.koyeb.app")
                 finally:
                     all_paused = False
+                if config_dict.get("NYAA_PROXY") and last_link and "nyaa.si" in last_link:
+                    last_link = last_link.replace("nyaa.si", "nyaa.koyeb.app")
                 last_title = rss_d.entries[0]["title"]
                 if data["last_feed"] == last_link or data["last_title"] == last_title:
                     continue

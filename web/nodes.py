@@ -152,17 +152,17 @@ def create_list(par, msg, depth=0):
         return f"{size_in_bytes:.2f}{units[index]}" if index > 0 else f"{int(size_in_bytes)}B"
     
     if depth > 0:
-        msg[0] += '<div class="ml-4 md:ml-12 pl-2 md:pl-4 border-l border-outline-variant/20 flex flex-col gap-1 mt-1">'
+        msg[0] += '<div class="ml-2 sm:ml-4 md:ml-6 pl-1.5 sm:pl-2 md:pl-3 border-l border-outline-variant/30 flex flex-col gap-1 mt-1">'
     
     for i in par.children:
         if i.is_folder:
-            msg[0] += '<div class="flex flex-col mt-3 mb-1">'
+            msg[0] += '<div class="flex flex-col mt-2 mb-1">'
             if i.name != ".unwanted":
-                msg[0] += f'''<div class="file-row flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-colors group/row">
-    <div class="flex items-center gap-4">
-        <input class="neon-checkbox folder-checkbox" type="checkbox" name="foldernode_{msg[1]}">
-        <span class="material-symbols-outlined text-secondary-dim group-hover/row:text-secondary transition-colors" style="font-variation-settings: 'FILL' 1;">folder_open</span>
-        <span class="font-body text-body-md text-on-surface font-medium" style="word-break: break-all;">{i.name}</span>
+                msg[0] += f'''<div class="file-row flex items-center justify-between px-2 sm:px-3 py-2 rounded-lg cursor-pointer transition-colors hover:bg-white/5 group/row">
+    <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        <input class="neon-checkbox folder-checkbox shrink-0" type="checkbox" name="foldernode_{msg[1]}">
+        <span class="material-symbols-outlined text-secondary-dim group-hover/row:text-secondary shrink-0 transition-colors" style="font-variation-settings: 'FILL' 1;">folder_open</span>
+        <span class="font-body text-xs sm:text-sm text-on-surface font-medium truncate" title="{i.name}">{i.name}</span>
     </div>
 </div>'''
             create_list(i, msg, depth + 1)
@@ -171,15 +171,15 @@ def create_list(par, msg, depth=0):
         else:
             checked = "checked" if i.priority != 0 else ""
             size_str = get_readable_file_size(i.size) if hasattr(i, 'size') else "0B"
-            progress_str = f" / {i.progress}%" if hasattr(i, 'progress') and i.progress is not None and i.progress > 0 else ""
+            progress_str = f" ({i.progress}%)" if hasattr(i, 'progress') and i.progress is not None and i.progress > 0 else ""
             
-            msg[0] += f'''<div class="file-row flex items-center justify-between px-4 py-2 rounded-lg cursor-pointer">
-    <div class="flex items-center gap-4">
-        <input {checked} class="neon-checkbox" type="checkbox" name="filenode_{i.file_id}" data-size="{i.size}">
-        <span class="material-symbols-outlined text-on-surface-variant text-sm" style="font-variation-settings: 'FILL' 0;">movie</span>
-        <span class="font-body text-body-md text-on-surface/90" data-size="{i.size}" style="word-break: break-all;">{i.name}</span>
+            msg[0] += f'''<div class="file-row flex items-center justify-between gap-2 px-2 sm:px-3 py-1.5 rounded-lg cursor-pointer transition-colors hover:bg-white/5">
+    <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        <input {checked} class="neon-checkbox shrink-0" type="checkbox" name="filenode_{i.file_id}" data-size="{i.size}">
+        <span class="material-symbols-outlined text-on-surface-variant text-base shrink-0" style="font-variation-settings: 'FILL' 0;">movie</span>
+        <span class="font-body text-xs sm:text-sm text-on-surface/90 font-normal truncate" data-size="{i.size}" title="{i.name}">{i.name}</span>
     </div>
-    <span class="font-body text-label-sm text-on-surface-variant shrink-0">{size_str}{progress_str}</span>
+    <span class="font-body text-[11px] sm:text-xs text-on-surface-variant shrink-0 font-mono whitespace-nowrap">{size_str}{progress_str}</span>
     <input type="hidden" value="off" name="filenode_{i.file_id}">
 </div>'''
 
@@ -227,3 +227,45 @@ def make_mega_tree(file_list):
         )
 
     return create_list(parent, ["", 0])
+
+
+def make_gdrive_tree(file_list):
+    parent = TorNode("Google Drive")
+    folder_id = 0
+    path_to_node = {"": parent}
+
+    folders = sorted(
+        [f for f in file_list if f["is_dir"]],
+        key=lambda x: x["path"].count("/"),
+    )
+    for f in folders:
+        full_path = f"{f['path']}{f['name']}".rstrip("/")
+        if full_path in path_to_node:
+            continue
+        parent_path = f["path"].rstrip("/")
+        parent_node = path_to_node.get(parent_path, parent)
+        path_to_node[full_path] = TorNode(
+            f["name"],
+            is_folder=True,
+            parent=parent_node,
+            file_id=folder_id,
+        )
+        folder_id += 1
+
+    for f in file_list:
+        if f["is_dir"]:
+            continue
+        parent_path = f["path"].rstrip("/")
+        parent_node = path_to_node.get(parent_path, parent)
+        TorNode(
+            f["name"],
+            is_file=True,
+            parent=parent_node,
+            size=f["size"],
+            priority=1 if f.get("selected", True) else 0,
+            file_id=f["id"],
+            progress=0,
+        )
+
+    return create_list(parent, ["", 0])
+

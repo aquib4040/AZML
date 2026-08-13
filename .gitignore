@@ -1,6 +1,10 @@
 config.env
 *.pyc
+__pycache__/
+*.py[cod]
+*$py.class
 data*
+
 .vscode
 .idea
 *.json

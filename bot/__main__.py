@@ -89,7 +89,9 @@ from .modules import (
     broadcast,
     category_select,
     mega_select,
+    gd_select,
 )
+
 
 
 async def stats(client, message):

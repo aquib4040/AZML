@@ -920,6 +920,82 @@ class GoogleDriveHelper:
                 self.__total_files += 1
                 self.__gDrive_file(filee)
 
+    def get_folder_tree(self, folder_id, rel_path="", files=None):
+        if files is None:
+            files = []
+        result = self.__getFilesByFolderId(folder_id)
+        if len(result) == 0:
+            return files
+        result = sorted(result, key=lambda k: k["name"])
+        for item in result:
+            file_id = item["id"]
+            filename = item["name"]
+            shortcut_details = item.get("shortcutDetails")
+            if shortcut_details is not None:
+                file_id = shortcut_details["targetId"]
+                mime_type = shortcut_details["targetMimeType"]
+            else:
+                mime_type = item.get("mimeType")
+            if mime_type == self.__G_DRIVE_DIR_MIME_TYPE:
+                new_rel = f"{rel_path}{filename}/"
+                self.get_folder_tree(file_id, new_rel, files)
+            else:
+                size = int(item.get("size", 0))
+                files.append(
+                    {
+                        "id": file_id,
+                        "name": filename,
+                        "size": size,
+                        "mimeType": mime_type,
+                        "rel_path": rel_path,
+                        "selected": True,
+                    }
+                )
+        return files
+
+    def download_selected(self, selected_files):
+        self.__is_downloading = True
+        self.__updater = setInterval(self.__update_interval, self.__progress)
+        try:
+            base_dir = f"{self.__path}/{self.name}".replace("\\", "/")
+            makedirs(base_dir, exist_ok=True)
+            for item in selected_files:
+                if self.__is_cancelled:
+                    break
+                file_id = item["id"]
+                filename = item["name"]
+                mime_type = item.get("mimeType")
+                rel_path = item.get("rel_path", "")
+                dest_dir = ospath.join(base_dir, rel_path).replace("\\", "/")
+                makedirs(dest_dir, exist_ok=True)
+                if not ospath.isfile(
+                    ospath.join(dest_dir, filename)
+                ) and not filename.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
+                    self.__download_file(file_id, dest_dir, filename, mime_type)
+        except Exception as err:
+            if isinstance(err, RetryError):
+                LOGGER.info(f"Total Attempts: {err.last_attempt.attempt_number}")
+                err = err.last_attempt.exception()
+            err = str(err).replace(">", "").replace("<", "")
+            if "downloadQuotaExceeded" in err:
+                err = "Download Quota Exceeded."
+            elif "File not found" in err:
+                if not self.__alt_auth:
+                    token_service = self.__alt_authorize()
+                    if token_service is not None:
+                        LOGGER.error("File not found. Trying with token.pickle...")
+                        self.__service = token_service
+                        self.__updater.cancel()
+                        return self.download_selected(selected_files)
+                err = "File not found!"
+            async_to_sync(self.__listener.onDownloadError, err)
+            self.__is_cancelled = True
+        finally:
+            self.__updater.cancel()
+            if self.__is_cancelled:
+                return
+            async_to_sync(self.__listener.onDownloadComplete)
+
     def download(self, link):
         self.__is_downloading = True
         file_id = self.getIdFromUrl(link)
@@ -956,6 +1032,7 @@ class GoogleDriveHelper:
             if self.__is_cancelled:
                 return
             async_to_sync(self.__listener.onDownloadComplete)
+
 
     def __download_folder(self, folder_id, path, folder_name):
         folder_name = folder_name.replace("/", "")

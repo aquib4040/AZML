@@ -4,8 +4,9 @@ from qbittorrentapi import NotFound404Error, Client as qbClient
 from aria2p import API as ariaAPI, Client as ariaClient
 from flask import Flask, request
 
-from web.nodes import make_tree, make_mega_tree
+from web.nodes import make_tree, make_mega_tree, make_gdrive_tree
 from web.mega_selection_store import MegaSelectionStore
+from web.gdrive_selection_store import GDriveSelectionStore
 
 app = Flask(__name__)
 
@@ -109,53 +110,54 @@ page = """
         }
     </style>
 </head>
-<body class="antialiased min-h-screen p-4 md:p-8 font-body relative">
+<body class="antialiased min-h-screen p-2 sm:p-4 md:p-8 font-body relative">
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none z-[-1]"></div>
     
-    <div class="max-w-4xl mx-auto flex flex-col gap-6">
+    <div class="max-w-4xl mx-auto flex flex-col gap-3 sm:gap-6">
         <!-- Header -->
-        <header class="glass-card rounded-2xl p-4 flex items-center justify-between shadow-xl">
+        <header class="glass-card rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-xl">
             <div class="flex items-center gap-3">
-                <img class="w-10 h-10 rounded-full border border-primary/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]" src="https://graph.org/file/1a6ad157f55bc42b548df.png" alt="logo" />
-                <h1 class="font-headline font-extrabold text-xl tracking-tight text-on-surface">Bittorrent Selection</h1>
+                <img class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-primary/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]" src="https://graph.org/file/1a6ad157f55bc42b548df.png" alt="logo" />
+                <h1 class="font-headline font-extrabold text-lg sm:text-xl tracking-tight text-on-surface">File Selection</h1>
             </div>
-            <div class="flex items-center gap-4 text-on-surface-variant">
-                <a href="https://github.com/aquib4040/AZML" target="_blank" class="hover:text-primary transition-colors"><span class="material-symbols-outlined">code</span></a>
-                <a href="https://t.me/AlphaBotzChat" target="_blank" class="hover:text-primary transition-colors"><span class="material-symbols-outlined">chat</span></a>
+            <div class="flex items-center gap-3 sm:gap-4 text-on-surface-variant">
+                <a href="https://github.com/aquib4040/AZML" target="_blank" class="hover:text-primary transition-colors"><span class="material-symbols-outlined text-lg sm:text-2xl">code</span></a>
+                <a href="https://t.me/AlphaBotzChat" target="_blank" class="hover:text-primary transition-colors"><span class="material-symbols-outlined text-lg sm:text-2xl">chat</span></a>
             </div>
         </header>
 
         <!-- Stats Panel -->
-        <div id="sticks" class="glass-card rounded-2xl p-5 flex flex-col sm:flex-row justify-around items-center gap-4 text-center shadow-lg transition-all z-50">
+        <div id="sticks" class="glass-card rounded-2xl p-3 sm:p-5 flex flex-row justify-around items-center gap-2 sm:gap-4 text-center shadow-lg transition-all z-50">
             <div>
-                <span class="text-xs uppercase tracking-wider text-on-surface-variant">Selected Files</span>
-                <h4 class="font-headline text-lg font-bold text-primary mt-1"><span id="checked_files">0</span> <span class="text-on-surface-variant/50">of</span> <span id="total_files">0</span></h4>
+                <span class="text-[10px] sm:text-xs uppercase tracking-wider text-on-surface-variant">Selected Files</span>
+                <h4 class="font-headline text-base sm:text-lg font-bold text-primary mt-0.5 sm:mt-1"><span id="checked_files">0</span> <span class="text-on-surface-variant/50">/</span> <span id="total_files">0</span></h4>
             </div>
-            <div class="hidden sm:block w-[1px] h-8 bg-outline"></div>
+            <div class="w-[1px] h-8 bg-outline"></div>
             <div>
-                <span class="text-xs uppercase tracking-wider text-on-surface-variant">Selected Size</span>
-                <h4 class="font-headline text-lg font-bold text-primary mt-1"><span id="checked_size">0</span> <span class="text-on-surface-variant/50">of</span> <span id="total_size">0</span></h4>
+                <span class="text-[10px] sm:text-xs uppercase tracking-wider text-on-surface-variant">Selected Size</span>
+                <h4 class="font-headline text-base sm:text-lg font-bold text-primary mt-0.5 sm:mt-1"><span id="checked_size">0</span> <span class="text-on-surface-variant/50">/</span> <span id="total_size">0</span></h4>
             </div>
         </div>
 
         <!-- File List / Selector -->
-        <section class="glass-card rounded-2xl p-6 shadow-2xl relative">
+        <section class="glass-card rounded-2xl p-3 sm:p-6 shadow-2xl relative">
             <div class="absolute top-0 left-0 h-[2px] w-full bg-gradient-to-r from-primary/50 to-transparent"></div>
-            <form action="{form_url}" onsubmit="return s_validate()" method="POST" class="flex flex-col gap-6">
-                <div class="flex flex-col gap-2 rounded-xl bg-black/40 border border-outline p-4 max-h-[60vh] overflow-y-auto">
+            <form action="{form_url}" onsubmit="return s_validate()" method="POST" class="flex flex-col gap-3 sm:gap-6">
+                <div class="flex flex-col gap-1 rounded-xl bg-black/40 border border-outline p-2 sm:p-4 max-h-[65vh] overflow-y-auto overflow-x-hidden">
                     {My_content}
                 </div>
-                <button type="submit" class="self-center w-full sm:w-1/2 bg-primary hover:bg-primary-dim text-white font-headline font-bold py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(168,85,247,0.2)] hover:shadow-[0_0_30px_rgba(168,85,247,0.4)]">
+                <button type="submit" class="self-center w-full sm:w-1/2 bg-primary hover:bg-primary-dim text-white font-headline font-bold py-3 sm:py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(168,85,247,0.2)] hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] text-sm sm:text-base">
                     Confirm Selection
                 </button>
             </form>
         </section>
     </div>
 
+
     <!-- Scripts -->
     <script>
         function s_validate() {
-            if ($("input[name^='filenode_']:checked").length == 0) {
+            if ($("input[type='checkbox'][name^='filenode_']:checked").length == 0) {
                 alert("Select at least one file!");
                 return false;
             }
@@ -247,7 +249,7 @@ page = """
             checked_size();
             checkingfiles();
             
-            var fileInputs = $("input[name^='filenode_']");
+            var fileInputs = $("input[type='checkbox'][name^='filenode_']");
             $("#total_files").text(fileInputs.length);
             
             var total_size = 0;
@@ -262,7 +264,7 @@ page = """
 
         function checked_size() {
             var checked_size = 0;
-            var checkedboxes = $("input[name^='filenode_']:checked");
+            var checkedboxes = $("input[type='checkbox'][name^='filenode_']:checked");
             checkedboxes.each(function () {
                 var size = parseFloat($(this).data("size"));
                 if (!isNaN(size)) {
@@ -273,19 +275,18 @@ page = """
         }
 
         function checkingfiles() {
-            var checked_files = $("input[name^='filenode_']:checked").length;
+            var checked_files = $("input[type='checkbox'][name^='filenode_']:checked").length;
             $("#checked_files").text(checked_files);
         }
 
-        function humanFileSize(size) {
-            var i = -1;
-            var byteUnits = [' KB', ' MB', ' GB', ' TB', ' PB'];
-            do {
-                size = size / 1024;
-                i++;
-            } while (size > 1024);
-            return Math.max(size, 0).toFixed(1) + byteUnits[i];
+        function humanFileSize(bytes) {
+            if (!bytes || bytes <= 0 || isNaN(bytes)) return '0 B';
+            var units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+            var i = Math.floor(Math.log(bytes) / Math.log(1024));
+            i = Math.min(Math.max(0, i), units.length - 1);
+            return (bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 2) + ' ' + units[i];
         }
+
 
         function sticking() {
             var window_top = $(window).scrollTop();
@@ -457,9 +458,17 @@ def list_torrent_contents(id_):
     if request.args["pin_code"] != pincode:
         return "<h1>Incorrect pin code</h1>"
 
+    gdrive_store = GDriveSelectionStore()
+    gdrive_files = gdrive_store.get_data(id_)
     mega_store = MegaSelectionStore()
     mega_files = mega_store.get_data(id_)
-    if mega_files is not None:
+    if gdrive_files is not None:
+        selected_ids = set(gdrive_store.read_selection(id_))
+        for f in gdrive_files:
+            if not f.get("is_dir"):
+                f["selected"] = f["id"] in selected_ids
+        cont = make_gdrive_tree(gdrive_files)
+    elif mega_files is not None:
         selected_ids = set(mega_store.read_selection(id_))
         for f in mega_files:
             if not f.get("is_dir"):
@@ -483,14 +492,23 @@ def set_priority(id_):
 
     data = dict(request.form)
     resume = ""
+    gdrive_store = GDriveSelectionStore()
     mega_store = MegaSelectionStore()
-    if mega_store.get_data(id_) is not None:
+    if gdrive_store.get_data(id_) is not None:
         selected_ids = []
         for i, value in data.items():
             if "filenode" in i and value == "on":
-                node_id = i.split("_")[-1]
+                node_id = i.split("_", 1)[1] if "_" in i else i
+                selected_ids.append(node_id)
+        gdrive_store.save_selection(id_, selected_ids)
+    elif mega_store.get_data(id_) is not None:
+        selected_ids = []
+        for i, value in data.items():
+            if "filenode" in i and value == "on":
+                node_id = i.split("_", 1)[1] if "_" in i else i
                 selected_ids.append(node_id)
         mega_store.save_selection(id_, selected_ids)
+
     elif len(id_) > 20:
         pause = ""
 

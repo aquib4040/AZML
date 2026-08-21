@@ -792,6 +792,7 @@ async def format_filename(file_, user_id, dirpath=None, isMirror=False, custom_n
                         cap_mono = cap_mono.replace(args[0], "")
             cap_mono = cap_mono.replace("%%", "|").replace("&%&", "{").replace("$%$", "}")
         
+        custom_name = custom_name.replace("/", "-").replace("\\", "-").replace(":", "-").strip(" .-_")
         return custom_name, cap_mono
     
     ftag, ctag = ("m", "MIRROR") if isMirror else ("l", "LEECH")
@@ -952,6 +953,7 @@ async def format_filename(file_, user_id, dirpath=None, isMirror=False, custom_n
                 elif len(args) == 1:
                     cap_mono = cap_mono.replace(args[0], "")
         cap_mono = cap_mono.replace("%%", "|").replace("&%&", "{").replace("$%$", "}")
+    file_ = file_.replace("/", "-").replace("\\", "-").replace(":", "-").strip(" .-_")
     return file_, cap_mono
 
 async def get_ss(up_path, ss_no):

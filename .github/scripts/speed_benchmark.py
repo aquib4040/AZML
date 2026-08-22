@@ -5,6 +5,13 @@ import time
 import asyncio
 import aiohttp
 
+def progress_callback(current, total, start_time, action_name):
+    elapsed = time.time() - start_time
+    if elapsed > 0 and total > 0:
+        speed_mbs = (current / (1024 * 1024)) / elapsed
+        percent = (current / total) * 100
+        print(f"  -> [{action_name}] {percent:.1f}% ({current/(1024*1024):.1f}/{total/(1024*1024):.1f} MB) @ {speed_mbs:.2f} MB/s", end="\r")
+
 async def run_network_speedtest(target_loc="EU"):
     print("=== 1. SERVER NETWORK SPEEDTEST ===")
     try:
@@ -84,7 +91,12 @@ async def run_telegram_speedtest(bot_token, api_id, api_hash):
                     fsize_mb = (msg.document or msg.video or msg.audio).file_size / (1024 * 1024)
                     print(f"  - Downloading Custom Telegram File ({fsize_mb/1024:.2f} GB)...")
                     start_down = time.time()
-                    down_path = await app.download_media(msg)
+                    down_path = await app.download_media(
+                        msg,
+                        progress=progress_callback,
+                        progress_args=(start_down, "Downloading")
+                    )
+                    print()
                     down_duration = time.time() - start_down
                     tg_down_mbps = (fsize_mb * 8) / down_duration if down_duration > 0 else 0
                     print(f"  - Telegram Download Speed: {tg_down_mbps:.2f} Mbps ({fsize_mb/down_duration:.2f} MB/s)")
@@ -105,22 +117,37 @@ async def run_telegram_speedtest(bot_token, api_id, api_hash):
                 if rem_bytes > 0:
                     f.write(os.urandom(rem_bytes))
 
+            # Measure Telegram Upload Speed using AZML Pyrogram engine pattern
             print(f"  - Testing Telegram Upload Speed ({file_size_gb:.2f} GB)...")
             start_up = time.time()
-            msg = await app.send_document("me", test_file, caption=f"Telegram Speedtest ({file_size_gb:.2f} GB)")
+            msg = await app.send_document(
+                "me",
+                test_file,
+                caption=f"Telegram Speedtest ({file_size_gb:.2f} GB)",
+                progress=progress_callback,
+                progress_args=(start_up, "Uploading")
+            )
+            print()
             up_duration = time.time() - start_up
             tg_up_mbps = (file_size_mb * 8) / up_duration if up_duration > 0 else 0
             tg_up_mbs = file_size_mb / up_duration if up_duration > 0 else 0
             print(f"  - Telegram Upload Speed: {tg_up_mbps:.2f} Mbps ({tg_up_mbs:.2f} MB/s)")
 
+            # Measure Telegram Download Speed using AZML Pyrogram engine pattern
             print(f"  - Testing Telegram Download Speed ({file_size_gb:.2f} GB)...")
             start_down = time.time()
-            down_path = await app.download_media(msg)
+            down_path = await app.download_media(
+                msg,
+                progress=progress_callback,
+                progress_args=(start_down, "Downloading")
+            )
+            print()
             down_duration = time.time() - start_down
             tg_down_mbps = (file_size_mb * 8) / down_duration if down_duration > 0 else 0
             tg_down_mbs = file_size_mb / down_duration if down_duration > 0 else 0
             print(f"  - Telegram Download Speed: {tg_down_mbps:.2f} Mbps ({tg_down_mbs:.2f} MB/s)")
 
+            # Cleanup
             await msg.delete()
             if os.path.exists(test_file):
                 os.remove(test_file)
@@ -130,7 +157,7 @@ async def run_telegram_speedtest(bot_token, api_id, api_hash):
         await app.stop()
         return tg_down_mbps, tg_up_mbps
     except Exception as e:
-        print(f"  - Telegram Speedtest Error: {e}")
+        print(f"\n  - Telegram Speedtest Error: {e}")
         return 0, 0
 
 def update_readme_benchmark(down_net, up_net, tg_down, tg_up, target_loc="EU"):

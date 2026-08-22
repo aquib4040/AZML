@@ -1,0 +1,53 @@
+name: CI & CodeRabbit Bug Checker
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  lint-and-syntax:
+    name: Python Syntax & Bug Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Linting Tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff flake8
+
+      - name: Check Python AST & Compilation
+        run: |
+          python -m compileall bot web update.py
+
+      - name: Code Quality & Bug Scan (Ruff)
+        run: |
+          ruff check . --exit-zero --format=github
+
+  coderabbit-ai-review:
+    name: CodeRabbit AI Code & Bug Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: CodeRabbit AI Bug Reviewer
+        uses: coderabbitai/ai-pr-reviewer@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          debug: false

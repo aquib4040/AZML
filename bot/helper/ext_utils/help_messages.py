@@ -442,7 +442,7 @@ default_desp = {
     "AUTHORIZED_CHATS": "Fill user_id and chat_id of groups/users you want to authorize. Separate them by space.",
     "AUTO_DELETE_MESSAGE_DURATION": "Interval of time (in seconds), after which the bot deletes it's message and command message which is expected to be viewed instantly.\n\n <b>NOTE:</b> Set to -1 to disable auto message deletion.",
     "BASE_URL": "Valid BASE URL where the bot is deployed to use torrent web files selection. Format of URL should be http://myip, where myip is the IP/Domain(public) of your bot or if you have chosen port other than 80 so write it in this format http://myip:port (http and not https). Str",
-    "BASE_URL_PORT": "Which is the BASE_URL Port. Default is 80. Int",
+    "BASE_URL_PORT": "Which is the BASE_URL Port. Default is 85. Int",
     "BLACKLIST_USERS": "Restrict User from Using the Bot. It will Display a BlackListed Msg. USER_ID separated by space. Str",
     "BOT_MAX_TASKS": "Maximum number of Task Bot will Run parallel. (Queue Tasks Included). Int",
     "STORAGE_THRESHOLD": "To leave specific storage free and any download will lead to leave free storage less than this value will be cancelled the default unit is GB. Int",

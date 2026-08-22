@@ -388,7 +388,7 @@ async def load_config():
     MEDIA_GROUP = MEDIA_GROUP.lower() == "true"
 
     BASE_URL_PORT = environ.get("BASE_URL_PORT", environ.get("PORT", ""))
-    BASE_URL_PORT = 80 if len(str(BASE_URL_PORT)) == 0 else int(BASE_URL_PORT)
+    BASE_URL_PORT = 85 if len(str(BASE_URL_PORT)) == 0 else int(BASE_URL_PORT)
 
     RCLONE_SERVE_URL = environ.get("RCLONE_SERVE_URL", "")
     if len(RCLONE_SERVE_URL) == 0:

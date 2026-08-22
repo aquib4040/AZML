@@ -28,6 +28,7 @@ from logging import (
     warning as log_warning,
 )
 from uvloop import install
+from bot.helper.ext_utils.cloudflared import start_cloudflared_tunnel
 
 # from faulthandler import enable as faulthandler_enable
 # faulthandler_enable()
@@ -436,7 +437,7 @@ MEDIA_GROUP = environ.get("MEDIA_GROUP", "")
 MEDIA_GROUP = MEDIA_GROUP.lower() == "true"
 
 BASE_URL_PORT = environ.get("BASE_URL_PORT", environ.get("PORT", ""))
-BASE_URL_PORT = 80 if len(str(BASE_URL_PORT)) == 0 else int(BASE_URL_PORT)
+BASE_URL_PORT = 85 if len(str(BASE_URL_PORT)) == 0 else int(BASE_URL_PORT)
 
 BASE_URL = environ.get("BASE_URL", "").rstrip("/")
 if len(BASE_URL) == 0:
@@ -815,11 +816,18 @@ if ospath.exists("shorteners.txt"):
             if len(temp) == 2:
                 shorteners_list.append({"domain": temp[0], "api_key": temp[1]})
 
-if BASE_URL:
-    Popen(
-        f"gunicorn web.wserver:app --bind 0.0.0.0:{BASE_URL_PORT} --worker-class gevent",
-        shell=True,
-    )
+Popen(
+    f"gunicorn web.wserver:app --bind 0.0.0.0:{BASE_URL_PORT} --worker-class gevent",
+    shell=True,
+)
+
+if not BASE_URL:
+    cf_url = start_cloudflared_tunnel(BASE_URL_PORT)
+    if cf_url:
+        BASE_URL = cf_url
+        config_dict["BASE_URL"] = cf_url
+        environ["BASE_URL"] = cf_url
+        log_info(f"Cloudflare Tunnel created and set as BASE_URL: {BASE_URL}")
 
 srun(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
 if not ospath.exists(".netrc"):

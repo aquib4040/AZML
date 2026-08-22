@@ -266,6 +266,8 @@
 <details>
   <summary><b>🌐 Overall</b></summary>
 
+- **Cloudflare Quick Tunnel**: Automated zero-config HTTPS web selection URL generation on startup (`https://xxxx.trycloudflare.com`) saved directly to DB
+- **Modern UI Theme**: Small-caps typography (`👑 ᴏᴡɴᴇʀ`, `🟢 ᴀᴄᴛɪᴠᴀᴛᴇ ᴀᴄᴄᴇss ᴛᴏᴋᴇɴ`), styled inline buttons, and box border layouts
 - Docker image support: `amd64`, `arm64/v8`, `arm/v7`
 - Fully async (Pyrogram-based, uvloop-accelerated)
 - Live variable editing and private file overwrite without restart
@@ -507,53 +509,63 @@ Owner-only command to bulk delete or trash all files inside a Google Drive folde
 ## Deployment
 
 <details>
-  <summary><b>Docker (Recommended)</b></summary>
+  <summary><b>Docker Compose (Recommended)</b></summary>
 
-**Using docker-compose**
-
-```bash
-sudo apt install docker-compose
-sudo docker-compose up
-```
-
-To rebuild after config changes:
+### 1. Install Docker & Docker Compose
+Install Docker, Docker Compose plugin, and `nano` editor on Ubuntu/Debian:
 
 ```bash
-sudo docker-compose up --build
+sudo apt update && sudo apt install -y docker.io docker-compose-v2 nano
 ```
 
-Stop, start, and manage:
+### 2. Clone Repository
+```bash
+git clone https://github.com/aquib4040/AZML.git
+cd AZML
+```
+
+### 3. Setup Environment Variables (`.env`)
+Create and edit your `.env` file using `nano`. Docker Compose will automatically detect and load this `.env` file upon container startup:
 
 ```bash
-sudo docker-compose stop
-sudo docker-compose start
+nano .env
 ```
 
-**Using Docker CLI**
+Paste your required configuration variables (e.g. `BOT_TOKEN`, `TELEGRAM_API`, `TELEGRAM_HASH`, `OWNER_ID`, `DATABASE_URL`):
+
+```env
+BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyZ
+OWNER_ID=123456789
+TELEGRAM_API=123456
+TELEGRAM_HASH=0123456789abcdef0123456789abcdef
+DATABASE_URL=mongodb+srv://...
+```
+*(Press `Ctrl+O` then `Enter` to save, and `Ctrl+X` to exit nano.)*
+
+### 4. Build and Run Container
+Start the bot in detached (background) mode:
 
 ```bash
-sudo docker build . -t wzmlx
-sudo docker run -p 80:80 -p 8080:8080 wzmlx
+docker compose up -d --build
 ```
 
-To stop:
-
-```bash
-sudo docker ps
-sudo docker stop <container_id>
-```
-
-Cleanup:
-
-```bash
-sudo docker container prune
-sudo docker image prune -a
-```
-
-**Notes**
-- `BASE_URL_PORT` defaults to `80`, `RCLONE_SERVE_PORT` defaults to `8080`. Set these in `config.env` if using non-default ports.
-- Stop the container before deleting it; delete the container before deleting the image.
-- Check `nproc` and multiply by 4 for a recommended `AsyncIOThreadsCount` in `qbittorrent.conf`.
+### 5. Container Management Commands
+- **View Live Logs**:
+  ```bash
+  docker compose logs -f
+  ```
+- **Restart Bot**:
+  ```bash
+  docker compose restart
+  ```
+- **Stop Bot**:
+  ```bash
+  docker compose down
+  ```
+- **Update & Rebuild**:
+  ```bash
+  git pull && docker compose up -d --build
+  ```
 
 </details>
 

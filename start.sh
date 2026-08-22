@@ -1,5 +1,5 @@
 #!/bin/bash
-export PORT=${PORT:-80}
+export PORT=${PORT:-85}
 
 if [ -f .env ]; then
   set -a

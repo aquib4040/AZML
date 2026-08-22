@@ -29,6 +29,6 @@ jobs:
         run: |
           python -m compileall bot web update.py
 
-      - name: Code Quality & Bug Scan (Ruff)
+      - name: Critical Bug & Syntax Error Scan (Ruff)
         run: |
-          ruff check . --output-format=github || true
+          ruff check . --select=E9,F6,F7,F8 --output-format=github

@@ -14,12 +14,23 @@ def azmlTgClient(*args, **kwargs):
         kwargs["max_concurrent_transmissions"] = 1000
     return Client(*args, **kwargs)
 
-def progress_callback(current, total, start_time, label):
-    elapsed = time.time() - start_time
-    if elapsed > 0 and total > 0:
-        speed_mbs = (current / (1024 * 1024)) / elapsed
-        percent = (current / total) * 100
-        print(f"[{label}] {percent:.1f}% ({current/(1024*1024):.1f}/{total/(1024*1024):.1f} MB) @ {speed_mbs:.2f} MB/S", end="\r")
+class SpeedTracker:
+    def __init__(self, label):
+        self.label = label
+        self.start_time = None
+        self.peak_speed = 0.0
+
+    def callback(self, current, total):
+        if self.start_time is None:
+            self.start_time = time.time()
+        
+        elapsed = time.time() - self.start_time
+        if elapsed > 0 and total > 0:
+            current_speed = (current / (1024 * 1024)) / elapsed
+            if current_speed > self.peak_speed:
+                self.peak_speed = current_speed
+            percent = (current / total) * 100
+            print(f"[{self.label}] {percent:.1f}% ({current/(1024*1024):.1f}/{total/(1024*1024):.1f} MB) @ {current_speed:.2f} MB/S (Peak: {self.peak_speed:.2f} MB/S)", end="\r")
 
 async def run_telegram_benchmark(bot_token, api_id, api_hash, owner_id):
     try:
@@ -46,42 +57,48 @@ async def run_telegram_benchmark(bot_token, api_id, api_hash, owner_id):
             if rem > 0:
                 f.write(os.urandom(rem))
 
+        # Benchmark Upload
+        print("Measuring Telegram Upload Speed (1.91 GB)...")
+        up_tracker = SpeedTracker("Upload")
         start_up = time.time()
         msg = await app.send_document(
             chat_target,
             test_file,
             caption="Speedtest Payload",
-            progress=progress_callback,
-            progress_args=(start_up, "Upload")
+            progress=up_tracker.callback
         )
         print()
         up_duration = time.time() - start_up
-        tg_up_mbs = file_mb / up_duration if up_duration > 0 else 0
+        up_avg = file_mb / up_duration if up_duration > 0 else 0
+        up_peak = up_tracker.peak_speed
 
         if os.path.exists(test_file):
             os.remove(test_file)
 
+        # Benchmark Download
+        print("Measuring Telegram Download Speed (1.91 GB)...")
+        down_tracker = SpeedTracker("Download")
         start_down = time.time()
         down_path = await app.download_media(
             msg,
-            progress=progress_callback,
-            progress_args=(start_down, "Download")
+            progress=down_tracker.callback
         )
         print()
         down_duration = time.time() - start_down
-        tg_down_mbs = file_mb / down_duration if down_duration > 0 else 0
+        down_avg = file_mb / down_duration if down_duration > 0 else 0
+        down_peak = down_tracker.peak_speed
 
         await msg.delete()
         if down_path and os.path.exists(down_path):
             os.remove(down_path)
 
         await app.stop()
-        return tg_down_mbs, tg_up_mbs
+        return down_avg, down_peak, up_avg, up_peak
     except Exception as e:
         print(f"Telegram Benchmark Error: {e}")
-        return 0.0, 0.0
+        return 0.0, 0.0, 0.0, 0.0
 
-def update_readme(tg_down_mbs, tg_up_mbs, loc):
+def update_readme(down_avg, down_peak, up_avg, up_peak, loc):
     readme_path = "README.md"
     if not os.path.exists(readme_path):
         return
@@ -92,10 +109,10 @@ def update_readme(tg_down_mbs, tg_up_mbs, loc):
 ### ⚡ Telegram Speed Benchmark (1.91 GB)
 *Region: **{region}** | Updated: {ts}*
 
-| Benchmark | Speed |
-|---|---|
-| ⬇️ Telegram Download (1.91 GB) | {tg_down_mbs:.2f} MB/S |
-| ⬆️ Telegram Upload (1.91 GB) | {tg_up_mbs:.2f} MB/S |
+| Benchmark | Avg Speed | Peak Speed |
+|---|---|---|
+| ⬇️ Telegram Download (1.91 GB) | {down_avg:.2f} MB/S | {down_peak:.2f} MB/S |
+| ⬆️ Telegram Upload (1.91 GB) | {up_avg:.2f} MB/S | {up_peak:.2f} MB/S |
 <!-- SPEEDTEST_END -->"""
 
     with open(readme_path, "r", encoding="utf-8") as f:
@@ -113,11 +130,11 @@ async def main():
     api_hash = os.environ.get("TELEGRAM_HASH")
     owner_id = os.environ.get("OWNER_ID")
 
-    tg_down_mbs, tg_up_mbs = 0.0, 0.0
+    down_avg, down_peak, up_avg, up_peak = 0.0, 0.0, 0.0, 0.0
     if bot_token and api_id and api_hash and owner_id:
-        tg_down_mbs, tg_up_mbs = await run_telegram_benchmark(bot_token, api_id, api_hash, owner_id)
+        down_avg, down_peak, up_avg, up_peak = await run_telegram_benchmark(bot_token, api_id, api_hash, owner_id)
 
-    update_readme(tg_down_mbs, tg_up_mbs, loc)
+    update_readme(down_avg, down_peak, up_avg, up_peak, loc)
 
 if __name__ == "__main__":
     asyncio.run(main())

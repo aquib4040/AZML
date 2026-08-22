@@ -1,0 +1,32 @@
+name: Network & Code Speed Benchmark
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 0" # Runs weekly on Sunday
+
+jobs:
+  speed-benchmark:
+    name: Track Upload & Download Speed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Benchmark Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install speedtest-cli aiohttp pyrogram tgcrypto
+
+      - name: Run Speed Benchmark Pipeline
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          TELEGRAM_API: ${{ secrets.TELEGRAM_API }}
+          TELEGRAM_HASH: ${{ secrets.TELEGRAM_HASH }}
+        run: |
+          python .github/scripts/speed_benchmark.py

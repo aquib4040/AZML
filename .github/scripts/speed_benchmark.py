@@ -117,8 +117,12 @@ async def run_telegram_benchmark(bot_token, api_id, api_hash, owner_id):
         await app.start()
 
         # Detect Bot DC
-        bot_dc_val = getattr(app.storage, "dc_id", None) or getattr(app.me, "dc_id", None)
-        bot_dc = f"DC{bot_dc_val}" if bot_dc_val else "DC4"
+        if hasattr(app.storage, "dc_id"):
+            dc_attr = app.storage.dc_id
+            bot_dc_val = await dc_attr() if asyncio.iscoroutinefunction(dc_attr) else dc_attr()
+        else:
+            bot_dc_val = getattr(app.me, "dc_id", 4)
+        bot_dc = f"DC{bot_dc_val}"
 
         # Detect Owner DC
         try:

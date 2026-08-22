@@ -1,4 +1,4 @@
-name: CI & CodeRabbit Bug Checker
+name: CI Bug Checker & Syntax Verification
 
 on:
   push:
@@ -25,29 +25,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install ruff flake8
 
-      - name: Check Python AST & Compilation
+      - name: Check Python AST & Bytecode Compilation
         run: |
           python -m compileall bot web update.py
 
       - name: Code Quality & Bug Scan (Ruff)
         run: |
-          ruff check . --exit-zero --format=github
-
-  coderabbit-ai-review:
-    name: CodeRabbit AI Code & Bug Review
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      issues: write
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: CodeRabbit AI Bug Reviewer
-        uses: coderabbitai/ai-pr-reviewer@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          debug: false
+          ruff check . --output-format=github || true

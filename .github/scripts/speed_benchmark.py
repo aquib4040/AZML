@@ -23,13 +23,36 @@ def progress_callback(current, total, start_time, label):
 
 async def run_telegram_benchmark(bot_token, api_id, api_hash):
     try:
-        app = azmlTgClient(
-            "tg_speed_session",
-            api_id=int(api_id),
-            api_hash=api_hash,
-            bot_token=bot_token,
-            in_memory=True
-        )
+        session_str = os.environ.get("USER_SESSION_STRING", "").strip()
+        owner_id = os.environ.get("OWNER_ID") or os.environ.get("LOG_CHANNEL") or os.environ.get("CHAT_ID")
+
+        if session_str:
+            app = azmlTgClient(
+                "tg_speed_session",
+                api_id=int(api_id),
+                api_hash=api_hash,
+                session_string=session_str,
+                in_memory=True
+            )
+            chat_target = "me"
+        elif bot_token:
+            if not owner_id:
+                print("\n  - Telegram Notice: Bots cannot send messages to themselves ('me').")
+                print("  - Please add secret OWNER_ID, LOG_CHANNEL, or USER_SESSION_STRING in GitHub Secrets!\n")
+                return 0.0, 0.0
+
+            app = azmlTgClient(
+                "tg_speed_session",
+                api_id=int(api_id),
+                api_hash=api_hash,
+                bot_token=bot_token,
+                in_memory=True
+            )
+            owner_str = str(owner_id).strip()
+            chat_target = int(owner_str) if (owner_str.isdigit() or owner_str.startswith("-")) else owner_str
+        else:
+            return 0.0, 0.0
+
         await app.start()
 
         file_mb = float(os.environ.get("BENCHMARK_FILE_SIZE_MB", "1956"))
@@ -48,7 +71,7 @@ async def run_telegram_benchmark(bot_token, api_id, api_hash):
         print("Measuring Telegram Upload Speed (1.91 GB)...")
         start_up = time.time()
         msg = await app.send_document(
-            "me",
+            chat_target,
             test_file,
             caption="Speedtest Payload",
             progress=progress_callback,
@@ -116,7 +139,7 @@ async def main():
     api_hash = os.environ.get("TELEGRAM_HASH")
 
     tg_down_mbs, tg_up_mbs = 0.0, 0.0
-    if bot_token and api_id and api_hash:
+    if api_id and api_hash and (bot_token or os.environ.get("USER_SESSION_STRING")):
         tg_down_mbs, tg_up_mbs = await run_telegram_benchmark(bot_token, api_id, api_hash)
 
     update_readme(tg_down_mbs, tg_up_mbs, loc)

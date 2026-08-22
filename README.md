@@ -32,12 +32,12 @@
 
 <!-- SPEEDTEST_START -->
 ### ⚡ Telegram Speed Benchmark (1.91 GB)
-*Region: **Europe (DC4)** | Last Run: Pending workflow execution*
+*Region: **Europe (DC4)** | Updated: 2026-08-22 15:03:19 UTC*
 
 | Benchmark | Speed |
 |---|---|
-| ⬇️ Telegram Download (1.91 GB) | -- MB/S |
-| ⬆️ Telegram Upload (1.91 GB) | -- MB/S |
+| ⬇️ Telegram Download (1.91 GB) | 0.00 MB/S |
+| ⬆️ Telegram Upload (1.91 GB) | 0.00 MB/S |
 <!-- SPEEDTEST_END -->
 
 ## Features

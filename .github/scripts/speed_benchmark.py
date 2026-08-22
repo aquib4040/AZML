@@ -6,7 +6,7 @@ import asyncio
 from inspect import signature
 from pyrogram import Client
 
-def wztgClient(*args, **kwargs):
+def azmlTgClient(*args, **kwargs):
     if "max_concurrent_transmissions" in signature(Client.__init__).parameters:
         kwargs["max_concurrent_transmissions"] = 1000
     return Client(*args, **kwargs)
@@ -38,7 +38,7 @@ async def run_network_speedtest(loc="EU"):
 
 async def run_telegram_speedtest(bot_token, api_id, api_hash):
     try:
-        app = wztgClient(
+        app = azmlTgClient(
             "tg_speed_session",
             api_id=int(api_id),
             api_hash=api_hash,

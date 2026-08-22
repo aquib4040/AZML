@@ -2,9 +2,9 @@
 class WZMLStyle:
     # ----------------------
     # async def start(client, message) ---> __main__.py
-    ST_BN1_NAME = "OWNER"
-    ST_BN1_URL = "https://t.me/ExE_AQUIB"
-    ST_BN2_NAME = "UPDATES"
+    ST_BN1_NAME = "👑 ᴏᴡɴᴇʀ"
+    ST_BN1_URL = "https://t.me/Issei_Senpai_01"
+    ST_BN2_NAME = "📢 ᴜᴘᴅᴀᴛᴇs"
     ST_BN2_URL = "https://t.me/Canon_Bots"
     ST_MSG = """<i>This bot can mirror all your links|files|torrents to Google Drive or any rclone cloud or to telegram or to ddl servers.</i>
 <b>Type {help_command} to get a list of available commands</b>"""
@@ -17,13 +17,16 @@ class WZMLStyle:
         """<b>Temporary Token already used!</b>\n\n<i>Kindly generate a new one.</i>"""
     )
     LOGGED_PASSWORD = """<b>Bot Already Logged In via Password</b>\n\n<i>No Need to Accept Temp Tokens.</i>"""
-    ACTIVATE_BUTTON = "Activate Temporary Token"
-    TOKEN_MSG = """<b><u>Generated Temporary Login Token!</u></b>
-<b>Temp Token:</b> <code>{token}</code>
-<b>Validity:</b> {validity}"""
+    ACTIVATE_BUTTON = "🟢 ᴀᴄᴛɪᴠᴀᴛᴇ ᴀᴄᴄᴇss ᴛᴏᴋᴇɴ"
+    TOKEN_MSG = """⌬ <b><u>ᴀᴄᴄᴇss ᴛᴏᴋᴇɴ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ :</u></b>
+
+┎ <b>Token:</b> <code>{token}</code>
+┖ <b>Validity:</b> <code>{validity}</code>
+
+➲ <i>Click the button below to activate your access.</i>"""
     # ---------------------
     # async def token_callback(_, query): ---> __main__.py
-    ACTIVATED = "✅️ Activated ✅"
+    ACTIVATED = "✅ ᴀᴄᴛɪᴠᴀᴛᴇᴅ"
     # ---------------------
     # async def login(_, message): --> __main__.py
     LOGGED_IN = "<b>Already Bot Login In!</b>"
@@ -32,15 +35,15 @@ class WZMLStyle:
     LOGIN_USED = "<b>Bot Login Usage :</b>\n\n<code>/cmd [password]</code>"
     # ---------------------
     # async def log(_, message): ---> __main__.py
-    LOG_DISPLAY_BT = "📑 Log Display"
-    WEB_PASTE_BT = "📨 Web Paste (SB)"
+    LOG_DISPLAY_BT = "📑 ʟᴏɢ ᴅɪsᴘʟᴀʏ"
+    WEB_PASTE_BT = "📨 ᴡᴇʙ ᴘᴀsᴛᴇ"
     # ---------------------
     # async def bot_help(client, message): ---> __main__.py
-    BASIC_BT = "Basic"
-    USER_BT = "Users"
-    MICS_BT = "Mics"
-    O_S_BT = "Owner & Sudos"
-    CLOSE_BT = "Close"
+    BASIC_BT = "🔹 ʙᴀsɪᴄ"
+    USER_BT = "👥 ᴜsᴇʀs"
+    MICS_BT = "⚙️ ᴍɪsᴄ"
+    O_S_BT = "👑 ᴏᴡɴᴇʀ & sᴜᴅᴏ"
+    CLOSE_BT = "✖️ ᴄʟᴏsᴇ"
     HELP_HEADER = "㊂ <b><i>Help Guide Menu!</i></b>\n\n<b>NOTE: <i>Click on any CMD to see more minor detalis.</i></b>"
 
     # async def stats(client, message):
@@ -161,18 +164,18 @@ class WZMLStyle:
     M_CC = "┖ <b>By: </b>{Tag}\n\n"
     M_BOT_MSG = "➲ <b><i>Link(s) have been Sent to Bot PM (Private)</i></b>"
     # ----- BUTTONS -------
-    CLOUD_LINK = "☁️ Cloud Link"
-    SAVE_MSG = "📨 Save Message"
-    RCLONE_LINK = "♻️ RClone Link"
-    DDL_LINK = "📎 {Serv} Link"
-    SOURCE_URL = "🔐 Source Link"
-    INDEX_LINK_F = "🗂 Index Link"
-    INDEX_LINK_D = "⚡ Index Link"
-    VIEW_LINK = "🌐 View Link"
-    CHECK_PM = "📥 View in Bot PM"
-    CHECK_LL = "🖇 View in Links Log"
-    MEDIAINFO_LINK = "📃 MediaInfo"
-    SCREENSHOTS = "🖼 ScreenShots"
+    CLOUD_LINK = "☁️ ᴄʟᴏᴜᴅ ʟɪɴᴋ"
+    SAVE_MSG = "📨 sᴀᴠᴇ ᴍᴇssᴀɢᴇ"
+    RCLONE_LINK = "♻️ ʀᴄʟᴏɴᴇ ʟɪɴᴋ"
+    DDL_LINK = "📎 {Serv} ʟɪɴᴋ"
+    SOURCE_URL = "🔐 sᴏᴜʀᴄᴇ ʟɪɴᴋ"
+    INDEX_LINK_F = "🗂 ɪɴᴅᴇx ʟɪɴᴋ"
+    INDEX_LINK_D = "⚡ ɪɴᴅᴇx ʟɪɴᴋ"
+    VIEW_LINK = "🌐 ᴠɪᴇᴡ ʟɪɴᴋ"
+    CHECK_PM = "📥 ᴠɪᴇᴡ ɪɴ ʙᴏᴛ ᴘᴍ"
+    CHECK_LL = "🖇 ᴠɪᴇᴡ ɪɴ ʟɪɴᴋs ʟᴏɢ"
+    MEDIAINFO_LINK = "📃 ᴍᴇᴅɪᴀɪɴғᴏ"
+    SCREENSHOTS = "🖼 sᴄʀᴇᴇɴsʜᴏᴛs"
     # ---------------------
 
     # def get_readable_message(): ---> bot_utilis.py
@@ -258,52 +261,52 @@ class WZMLStyle:
     # ---------------------
 
     # USER Setting --> user_setting.py
-    USER_SETTING = """㊂ <b><u>User Settings :</u></b>
+    USER_SETTING = """⌬ <b><u>ᴜsᴇʀ sᴇᴛᴛɪɴɢs :</u></b>
         
-┎<b> Name :</b> {NAME} ( <code>{ID}</code> )
-┠<b> Username :</b> {USERNAME}
-┠<b> Telegram DC :</b> {DC}
-┖<b> Language :</b> {LANG}
+┎ <b>Name :</b> {NAME} ( <code>{ID}</code> )
+┠ <b>Username :</b> {USERNAME}
+┠ <b>Telegram DC :</b> {DC}
+┖ <b>Language :</b> {LANG}
 
 ➲ <u><b>Available Args:</b></u>
 • <b>-s</b> or <b>-set</b>: Set Directly via Arg"""
 
-    UNIVERSAL = """㊂ <b><u>Universal Settings : {NAME}</u></b>
+    UNIVERSAL = """⌬ <b><u>ᴜɴɪᴠᴇʀsᴀʟ sᴇᴛᴛɪɴɢs :</u></b> {NAME}
 
-┎<b> YT-DLP Options :</b> <b><code>{YT}</code></b>
-┠<b> Daily Tasks :</b> <code>{DT}</code> per day
-┠<b> Last Bot Used :</b> <code>{LAST_USED}</code>
-┠<b> User Session :</b> <code>{USESS}</code>
-┠<b> MediaInfo Mode :</b> <code>{MEDIAINFO}</code>
-┠<b> Save Mode :</b> <code>{SAVE_MODE}</code>
-┖<b> User Bot PM :</b> <code>{BOT_PM}</code>"""
+┎ <b>YT-DLP Options :</b> <b><code>{YT}</code></b>
+┠ <b>Daily Tasks :</b> <code>{DT}</code> per day
+┠ <b>Last Bot Used :</b> <code>{LAST_USED}</code>
+┠ <b>User Session :</b> <code>{USESS}</code>
+┠ <b>MediaInfo Mode :</b> <code>{MEDIAINFO}</code>
+┠ <b>Save Mode :</b> <code>{SAVE_MODE}</code>
+┖ <b>User Bot PM :</b> <code>{BOT_PM}</code>"""
 
-    MIRROR = """㊂ <b><u>Mirror/Clone Settings : {NAME}</u></b>
+    MIRROR = """⌬ <b><u>ᴍɪʀʀᴏʀ sᴇᴛᴛɪɴɢs :</u></b> {NAME}
 
-┎<b> RClone Config :</b> <i>{RCLONE}</i>
-┠<b> Mirror Prefix :</b> <code>{MPREFIX}</code>
-┠<b> Mirror Suffix :</b> <code>{MSUFFIX}</code>
-┠<b> Mirror Remname :</b> <code>{MREMNAME}</code>
-┠<b> DDL Server(s) :</b> <i>{DDL_SERVER}</i>
-┠<b> User TD Mode :</b> <i>{TMODE}</i>
-┠<b> Total User TD(s) :</b> <i>{USERTD}</i>
-┖<b> Daily Mirror :</b> <code>{DM}</code> per day"""
+┎ <b>RClone Config :</b> <i>{RCLONE}</i>
+┠ <b>Mirror Prefix :</b> <code>{MPREFIX}</code>
+┠ <b>Mirror Suffix :</b> <code>{MSUFFIX}</code>
+┠ <b>Mirror Remname :</b> <code>{MREMNAME}</code>
+┠ <b>DDL Server(s) :</b> <i>{DDL_SERVER}</i>
+┠ <b>User TD Mode :</b> <i>{TMODE}</i>
+┠ <b>Total User TD(s) :</b> <i>{USERTD}</i>
+┖ <b>Daily Mirror :</b> <code>{DM}</code> per day"""
 
-    LEECH = """㊂ <b><u>Leech Settings for {NAME}</u></b>
+    LEECH = """⌬ <b><u>ʟᴇᴇᴄʜ sᴇᴛᴛɪɴɢs :</u></b> {NAME}
 
-┎<b> Daily Leech : </b><code>{DL}</code> per day
-┠<b> Leech Type :</b> <i>{LTYPE}</i>
-┠<b> Custom Thumbnail :</b> <i>{THUMB}</i>
-┠<b> Leech Split Size :</b> <code>{SPLIT_SIZE}</code>
-┠<b> Equal Splits :</b> <i>{EQUAL_SPLIT}</i>
-┠<b> Media Group :</b> <i>{MEDIA_GROUP}</i>
-┠<b> Leech Caption :</b> <code>{LCAPTION}</code>
-┠<b> Leech Prefix :</b> <code>{LPREFIX}</code>
-┠<b> Leech Suffix :</b> <code>{LSUFFIX}</code>
-┠<b> Leech Dumps :</b> <code>{LDUMP}</code>
-┠<b> AutoRename Template :</b> <code>{LREMNAME_AUTO}</code>
-┠<b> Regex Remname :</b> <code>{LREMNAME_REGEX}</code>
-┠<b> Rename Method :</b> <i>{RENAME_METHOD}</i>
-┠<b> AutoRename :</b> <i>{AUTORENAME}</i>
-┠<b> Auto Thumbnail :</b> <i>{AUTO_THUMB}</i>
-┖<B> Leech Metadata :</b> <code>{LMETA}</code>"""
+┎ <b>Daily Leech :</b> <code>{DL}</code> per day
+┠ <b>Leech Type :</b> <i>{LTYPE}</i>
+┠ <b>Custom Thumbnail :</b> <i>{THUMB}</i>
+┠ <b>Leech Split Size :</b> <code>{SPLIT_SIZE}</code>
+┠ <b>Equal Splits :</b> <i>{EQUAL_SPLIT}</i>
+┠ <b>Media Group :</b> <i>{MEDIA_GROUP}</i>
+┠ <b>Leech Caption :</b> <code>{LCAPTION}</code>
+┠ <b>Leech Prefix :</b> <code>{LPREFIX}</code>
+┠ <b>Leech Suffix :</b> <code>{LSUFFIX}</code>
+┠ <b>Leech Dumps :</b> <code>{LDUMP}</code>
+┠ <b>AutoRename Template :</b> <code>{LREMNAME_AUTO}</code>
+┠ <b>Regex Remname :</b> <code>{LREMNAME_REGEX}</code>
+┠ <b>Rename Method :</b> <i>{RENAME_METHOD}</i>
+┠ <b>AutoRename :</b> <i>{AUTORENAME}</i>
+┠ <b>Auto Thumbnail :</b> <i>{AUTO_THUMB}</i>
+┖ <b>Leech Metadata :</b> <code>{LMETA}</code>"""

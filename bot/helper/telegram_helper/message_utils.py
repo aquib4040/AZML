@@ -47,12 +47,164 @@ from bot.helper.ext_utils.bot_utils import (
     fetch_user_dumps,
     new_thread,
 )
-from bot.helper.telegram_helper.button_build import ButtonMaker
+import aiohttp
+import json
+
+from bot.helper.telegram_helper.button_build import ButtonMaker, to_bot_api_keyboard
 from bot.helper.ext_utils.exceptions import TgLinkException
+
+_http_session = None
+
+
+async def get_http_session():
+    global _http_session
+    if _http_session is None or _http_session.closed:
+        connector = aiohttp.TCPConnector(limit=100, keepalive_timeout=75)
+        _http_session = aiohttp.ClientSession(connector=connector)
+    return _http_session
+
+
+def sanitize_telegram_html(text: str) -> str:
+    if not text:
+        return text
+    # Convert Pyrogram pseudo-tags to Bot API valid HTML tags
+    text = str(text).replace("<spoiler>", "<tg-spoiler>").replace("</spoiler>", "</tg-spoiler>")
+    text = text.replace("<SPOILER>", "<tg-spoiler>").replace("</SPOILER>", "</tg-spoiler>")
+    return text
+
+
+async def send_styled_http_message(chat_id, text, keyboard_dict, photo=None, reply_to_message_id=None):
+    bot_token = config_dict.get("BOT_TOKEN", "")
+    if not bot_token:
+        return None
+    text = sanitize_telegram_html(text)
+    if photo:
+        if photo == "IMAGES":
+            try:
+                images_list = config_dict.get("IMAGES", [])
+                photo = rchoice(images_list) if images_list else None
+            except Exception:
+                photo = None
+        if photo:
+            url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
+            payload = {
+                "chat_id": chat_id,
+                "photo": photo,
+                "caption": text,
+                "parse_mode": "HTML",
+                "reply_markup": json.dumps(keyboard_dict),
+                "disable_notification": True,
+            }
+        else:
+            url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            payload = {
+                "chat_id": chat_id,
+                "text": text,
+                "parse_mode": "HTML",
+                "reply_markup": json.dumps(keyboard_dict),
+                "disable_web_page_preview": True,
+                "disable_notification": True,
+            }
+    else:
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        payload = {
+            "chat_id": chat_id,
+            "text": text,
+            "parse_mode": "HTML",
+            "reply_markup": json.dumps(keyboard_dict),
+            "disable_web_page_preview": True,
+            "disable_notification": True,
+        }
+    if reply_to_message_id:
+        payload["reply_to_message_id"] = reply_to_message_id
+    try:
+        session = await get_http_session()
+        async with session.post(url, data=payload, timeout=8) as resp:
+            data = await resp.json()
+            if data.get("ok"):
+                msg_id = data["result"]["message_id"]
+                return await bot.get_messages(chat_id, msg_id)
+            else:
+                LOGGER.error(f"HTTP Styled Message API Error: {data}")
+    except Exception as e:
+        LOGGER.error(f"HTTP Styled Message Error: {e}")
+    return None
+
+
+async def edit_styled_http_message(chat_id, message_id, text, keyboard_dict, is_media=False):
+    bot_token = config_dict.get("BOT_TOKEN", "")
+    if not bot_token:
+        return None
+    text = sanitize_telegram_html(text)
+    url = f"https://api.telegram.org/bot{bot_token}/editMessageCaption" if is_media else f"https://api.telegram.org/bot{bot_token}/editMessageText"
+    payload = {
+        "chat_id": chat_id,
+        "message_id": message_id,
+        "caption" if is_media else "text": text,
+        "parse_mode": "HTML",
+        "reply_markup": json.dumps(keyboard_dict),
+    }
+    if not is_media:
+        payload["disable_web_page_preview"] = True
+    try:
+        session = await get_http_session()
+        async with session.post(url, data=payload, timeout=8) as resp:
+            data = await resp.json()
+            if data.get("ok"):
+                return True
+            if is_media and not data.get("ok"):
+                url2 = f"https://api.telegram.org/bot{bot_token}/editMessageText"
+                payload2 = {
+                    "chat_id": chat_id,
+                    "message_id": message_id,
+                    "text": text,
+                    "parse_mode": "HTML",
+                    "reply_markup": json.dumps(keyboard_dict),
+                    "disable_web_page_preview": True,
+                }
+                async with session.post(url2, data=payload2, timeout=8) as resp2:
+                    d2 = await resp2.json()
+                    return d2.get("ok", False)
+    except Exception as e:
+        LOGGER.error(f"HTTP Styled Edit Error: {e}")
+    return None
+
+
+async def edit_styled_http_reply_markup(chat_id, message_id, keyboard_dict):
+    bot_token = config_dict.get("BOT_TOKEN", "")
+    if not bot_token:
+        return None
+    url = f"https://api.telegram.org/bot{bot_token}/editMessageReplyMarkup"
+    payload = {
+        "chat_id": chat_id,
+        "message_id": message_id,
+        "reply_markup": json.dumps(keyboard_dict),
+    }
+    try:
+        session = await get_http_session()
+        async with session.post(url, data=payload, timeout=8) as resp:
+            data = await resp.json()
+            if data.get("ok"):
+                return True
+    except Exception as e:
+        LOGGER.error(f"HTTP Styled ReplyMarkup Error: {e}")
+    return None
 
 
 async def sendMessage(message, text, buttons=None, photo=None, **kwargs):
     try:
+        if kb_dict := to_bot_api_keyboard(buttons):
+            chat_id = message.chat.id
+            reply_to_id = (
+                rply.id
+                if (rply := message.reply_to_message)
+                and not rply.text
+                and not rply.caption
+                else None
+            )
+            http_msg = await send_styled_http_message(chat_id, text, kb_dict, photo, reply_to_id)
+            if http_msg:
+                return http_msg
         if photo:
             try:
                 if photo == "IMAGES":
@@ -104,6 +256,10 @@ async def sendMessage(message, text, buttons=None, photo=None, **kwargs):
 
 async def sendCustomMsg(chat_id, text, buttons=None, photo=None, debug=False):
     try:
+        if kb_dict := to_bot_api_keyboard(buttons):
+            http_msg = await send_styled_http_message(chat_id, text, kb_dict, photo)
+            if http_msg:
+                return http_msg
         if photo:
             try:
                 if photo == "IMAGES":
@@ -188,6 +344,11 @@ async def sendMultiMessage(chat_ids, text, buttons=None, photo=None):
                     LOGGER.error(str(e))
                 continue
             LOGGER.info("DEBUG CP 2")
+            if not photo and (kb_dict := to_bot_api_keyboard(buttons)):
+                sent = await send_styled_http_message(chat.id, text, kb_dict, reply_to_message_id=topic_id)
+                if sent:
+                    msg_dict[f"{chat.id}:{topic_id}"] = sent
+                    continue
             sent = await bot.send_message(
                 chat_id=chat.id,
                 text=text,
@@ -208,6 +369,12 @@ async def sendMultiMessage(chat_ids, text, buttons=None, photo=None):
 
 async def editMessage(message, text, buttons=None, photo=None):
     try:
+        if kb_dict := to_bot_api_keyboard(buttons):
+            chat_id = message.chat.id
+            is_media = bool(message.media or getattr(message, "photo", None))
+            http_msg = await edit_styled_http_message(chat_id, message.id, text, kb_dict, is_media)
+            if http_msg:
+                return http_msg
         if message.media:
             if photo:
                 photo = rchoice(config_dict["IMAGES"]) if photo == "IMAGES" else photo
@@ -233,6 +400,11 @@ async def editMessage(message, text, buttons=None, photo=None):
 
 async def editReplyMarkup(message, reply_markup):
     try:
+        if kb_dict := to_bot_api_keyboard(reply_markup):
+            chat_id = message.chat.id
+            http_msg = await edit_styled_http_reply_markup(chat_id, message.id, kb_dict)
+            if http_msg:
+                return http_msg
         return await message.edit_reply_markup(reply_markup=reply_markup)
     except MessageNotModified:
         pass

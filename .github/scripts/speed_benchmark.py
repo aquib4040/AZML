@@ -66,16 +66,16 @@ async def run_telegram_benchmark(bot_token, api_id, api_hash, owner_id):
         await app.start()
 
         # Detect Bot DC
-        if getattr(app.me, "dc_id", None):
-            bot_dc = f"DC{app.me.dc_id}"
+        bot_dc_val = getattr(app.storage, "dc_id", None) or getattr(app.me, "dc_id", None)
+        bot_dc = f"DC{bot_dc_val}" if bot_dc_val else "DC4"
 
         # Detect Owner DC
         try:
             owner_obj = await app.get_users(chat_target)
-            if getattr(owner_obj, "dc_id", None):
-                owner_dc = f"DC{owner_obj.dc_id}"
+            owner_dc_val = getattr(owner_obj, "dc_id", None)
+            owner_dc = f"DC{owner_dc_val}" if owner_dc_val else bot_dc
         except Exception:
-            pass
+            owner_dc = bot_dc
 
         file_mb = float(os.environ.get("BENCHMARK_FILE_SIZE_MB", "1956"))
         test_file = f"tg_benchmark_{int(file_mb)}mb.dat"

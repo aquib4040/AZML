@@ -18,7 +18,7 @@ def progress_callback(current, total, start_time, label):
         percent = (current / total) * 100
         print(f"[{label}] {percent:.1f}% ({current/(1024*1024):.1f}/{total/(1024*1024):.1f} MB) @ {speed_mbs:.2f} MB/S", end="\r")
 
-async def run_telegram_download_benchmark(bot_token, api_id, api_hash):
+async def run_telegram_benchmark(bot_token, api_id, api_hash):
     try:
         app = azmlTgClient(
             "tg_speed_session",
@@ -41,12 +41,24 @@ async def run_telegram_download_benchmark(bot_token, api_id, api_hash):
             if rem > 0:
                 f.write(os.urandom(rem))
 
-        # Upload temporary test payload to Telegram
-        msg = await app.send_document("me", test_file, caption="Speedtest Payload")
+        # Benchmark Telegram Upload Speed (1.91 GB)
+        print("Measuring Telegram Upload Speed (1.91 GB)...")
+        start_up = time.time()
+        msg = await app.send_document(
+            "me",
+            test_file,
+            caption="Speedtest Payload",
+            progress=progress_callback,
+            progress_args=(start_up, "Uploading")
+        )
+        print()
+        up_duration = time.time() - start_up
+        tg_up_mbs = file_mb / up_duration if up_duration > 0 else 0
+
         if os.path.exists(test_file):
             os.remove(test_file)
 
-        # Benchmark ONLY Telegram Download Speed
+        # Benchmark Telegram Download Speed (1.91 GB)
         print("Measuring Telegram Download Speed (1.91 GB)...")
         start_down = time.time()
         down_path = await app.download_media(
@@ -64,12 +76,12 @@ async def run_telegram_download_benchmark(bot_token, api_id, api_hash):
             os.remove(down_path)
 
         await app.stop()
-        return tg_down_mbs
+        return tg_down_mbs, tg_up_mbs
     except Exception as e:
-        print(f"Telegram Download Benchmark Error: {e}")
-        return 0.0
+        print(f"Telegram Benchmark Error: {e}")
+        return 0.0, 0.0
 
-def update_readme(tg_down_mbs, loc):
+def update_readme(tg_down_mbs, tg_up_mbs, loc):
     readme_path = "README.md"
     if not os.path.exists(readme_path):
         return
@@ -77,12 +89,13 @@ def update_readme(tg_down_mbs, loc):
     region = "Europe (DC4)" if loc in ["EU", "DC4"] else "USA (DC1)"
     ts = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
     block = f"""<!-- SPEEDTEST_START -->
-### ⚡ Telegram Download Speed (1.91 GB)
+### ⚡ Telegram Speed Benchmark (1.91 GB)
 *Region: **{region}** | Updated: {ts}*
 
 | Benchmark | Speed |
 |---|---|
 | ⬇️ Telegram Download (1.91 GB) | {tg_down_mbs:.2f} MB/S |
+| ⬆️ Telegram Upload (1.91 GB) | {tg_up_mbs:.2f} MB/S |
 <!-- SPEEDTEST_END -->"""
 
     with open(readme_path, "r", encoding="utf-8") as f:
@@ -99,11 +112,11 @@ async def main():
     api_id = os.environ.get("TELEGRAM_API")
     api_hash = os.environ.get("TELEGRAM_HASH")
 
-    tg_down_mbs = 0.0
+    tg_down_mbs, tg_up_mbs = 0.0, 0.0
     if bot_token and api_id and api_hash:
-        tg_down_mbs = await run_telegram_download_benchmark(bot_token, api_id, api_hash)
+        tg_down_mbs, tg_up_mbs = await run_telegram_benchmark(bot_token, api_id, api_hash)
 
-    update_readme(tg_down_mbs, loc)
+    update_readme(tg_down_mbs, tg_up_mbs, loc)
 
 if __name__ == "__main__":
     asyncio.run(main())

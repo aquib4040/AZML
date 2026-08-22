@@ -21,10 +21,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Dependencies from requirements.txt
+      - name: Install uv & Fast Package Installation
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install --upgrade pip uv
+          uv pip install --system "setuptools_scm<8" vcs_versioning
+          uv pip install --system -r requirements.txt
 
       - name: Run Speed Benchmark Pipeline
         env:

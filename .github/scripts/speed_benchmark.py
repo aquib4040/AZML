@@ -3,8 +3,11 @@ import sys
 import re
 import time
 import asyncio
+import logging
 from inspect import signature
 from pyrogram import Client
+
+logging.getLogger("pyrogram").setLevel(logging.ERROR)
 
 def azmlTgClient(*args, **kwargs):
     if "max_concurrent_transmissions" in signature(Client.__init__).parameters:

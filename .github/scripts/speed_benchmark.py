@@ -37,9 +37,10 @@ class SpeedTracker:
     def callback(self, current, total):
         if self.start_time is None:
             self.start_time = time.time()
+            return
         
         elapsed = time.time() - self.start_time
-        if elapsed > 0 and total > 0:
+        if elapsed >= 0.5 and total > 0:
             current_speed = (current / (1024 * 1024)) / elapsed
             if current_speed > self.peak_speed:
                 self.peak_speed = current_speed

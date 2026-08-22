@@ -32,7 +32,7 @@
 
 <!-- SPEEDTEST_START -->
 ### ⚡ Telegram Speed Benchmark (1.91 GB)
-*Bot DC: **DC4** | Owner DC: **DC4** | Runner Server: **United States (Boydton)** | Updated: 2026-08-22 15:55:08 UTC*
+*Bot DC: **DC4** | Owner DC: **DC4** | GitHub Action Server: **United States (Boydton)** | Updated: 2026-08-22 15:55:08 UTC*
 
 | Benchmark | Avg Speed | Peak Speed |
 |---|---|---|

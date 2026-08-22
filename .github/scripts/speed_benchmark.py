@@ -24,11 +24,13 @@ async def get_runner_location():
                 if resp.status == 200:
                     data = await resp.json()
                     country = data.get("country", "")
+                    country_code = data.get("countryCode", "")
                     city = data.get("city", "")
-                    return f"{country} ({city})" if city else country
+                    loc_str = f"{country} ({city})" if city else country
+                    return loc_str, country_code
     except Exception:
         pass
-    return "GitHub Runner"
+    return "GitHub Action Server", "US"
 
 class SpeedTracker:
     def __init__(self, label):
@@ -196,7 +198,7 @@ def update_readme(down_avg, down_peak, up_avg, up_peak, bot_dc, owner_dc, runner
     ts = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
     block = f"""<!-- SPEEDTEST_START -->
 ### ⚡ Telegram Speed Benchmark (1.91 GB)
-*Bot DC: **{bot_dc}** | Owner DC: **{owner_dc}** | Runner Server: **{runner_loc}** | Updated: {ts}*
+*Bot DC: **{bot_dc}** | Owner DC: **{owner_dc}** | GitHub Action Server: **{runner_loc}** | Updated: {ts}*
 
 | Benchmark | Avg Speed | Peak Speed |
 |---|---|---|
@@ -213,11 +215,21 @@ def update_readme(down_avg, down_peak, up_avg, up_peak, bot_dc, owner_dc, runner
             f.write(pattern.sub(block, content))
 
 async def main():
-    runner_loc = await get_runner_location()
-    bot_token = os.environ.get("BOT_TOKEN")
+    runner_loc, country_code = await get_runner_location()
+    
+    # Auto-select DC1 bot token if server is in US/Americas, otherwise DC4 bot token
+    is_us = country_code.upper() in ["US", "USA", "CA", "MX"] or "UNITED STATES" in runner_loc.upper()
+    if is_us:
+        bot_token = os.environ.get("BOT_TOKEN_DC1") or os.environ.get("BOT_TOKEN")
+        owner_id = os.environ.get("OWNER_ID_DC1") or os.environ.get("OWNER_ID")
+        print(f"  - GitHub Action Server in US ({runner_loc}) -> Selected DC1 Bot Credentials.")
+    else:
+        bot_token = os.environ.get("BOT_TOKEN_DC4") or os.environ.get("BOT_TOKEN")
+        owner_id = os.environ.get("OWNER_ID_DC4") or os.environ.get("OWNER_ID")
+        print(f"  - GitHub Action Server in Europe ({runner_loc}) -> Selected DC4 Bot Credentials.")
+
     api_id = os.environ.get("TELEGRAM_API")
     api_hash = os.environ.get("TELEGRAM_HASH")
-    owner_id = os.environ.get("OWNER_ID")
 
     down_avg, down_peak, up_avg, up_peak = 0.0, 0.0, 0.0, 0.0
     bot_dc, owner_dc = "Unknown", "Unknown"

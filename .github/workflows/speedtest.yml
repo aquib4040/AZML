@@ -30,10 +30,13 @@ jobs:
       - name: Run Speed Benchmark Pipeline
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          BOT_TOKEN_DC1: ${{ secrets.BOT_TOKEN_DC1 }}
+          BOT_TOKEN_DC4: ${{ secrets.BOT_TOKEN_DC4 }}
           TELEGRAM_API: ${{ secrets.TELEGRAM_API }}
           TELEGRAM_HASH: ${{ secrets.TELEGRAM_HASH }}
           OWNER_ID: ${{ secrets.OWNER_ID }}
-          TG_DC_LOCATION: ${{ secrets.TG_DC_LOCATION || 'EU' }}
+          OWNER_ID_DC1: ${{ secrets.OWNER_ID_DC1 }}
+          OWNER_ID_DC4: ${{ secrets.OWNER_ID_DC4 }}
         run: |
           python .github/scripts/speed_benchmark.py
 

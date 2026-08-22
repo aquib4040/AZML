@@ -4,6 +4,7 @@ import re
 import time
 import asyncio
 import logging
+import aiohttp
 from inspect import signature
 from pyrogram import Client
 
@@ -13,6 +14,19 @@ def azmlTgClient(*args, **kwargs):
     if "max_concurrent_transmissions" in signature(Client.__init__).parameters:
         kwargs["max_concurrent_transmissions"] = 1000
     return Client(*args, **kwargs)
+
+async def get_runner_location():
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get("http://ip-api.com/json", timeout=5) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    country = data.get("country", "")
+                    city = data.get("city", "")
+                    return f"{country} ({city})" if city else country
+    except Exception:
+        pass
+    return "GitHub Runner"
 
 class SpeedTracker:
     def __init__(self, label):
@@ -33,6 +47,8 @@ class SpeedTracker:
             print(f"[{self.label}] {percent:.1f}% ({current/(1024*1024):.1f}/{total/(1024*1024):.1f} MB) @ {current_speed:.2f} MB/S (Peak: {self.peak_speed:.2f} MB/S)", end="\r")
 
 async def run_telegram_benchmark(bot_token, api_id, api_hash, owner_id):
+    bot_dc = "Unknown"
+    owner_dc = "Unknown"
     try:
         owner_str = str(owner_id).strip()
         chat_target = int(owner_str) if (owner_str.isdigit() or owner_str.startswith("-")) else owner_str
@@ -46,6 +62,18 @@ async def run_telegram_benchmark(bot_token, api_id, api_hash, owner_id):
         )
         await app.start()
 
+        # Detect Bot DC
+        if getattr(app.me, "dc_id", None):
+            bot_dc = f"DC{app.me.dc_id}"
+
+        # Detect Owner DC
+        try:
+            owner_obj = await app.get_users(chat_target)
+            if getattr(owner_obj, "dc_id", None):
+                owner_dc = f"DC{owner_obj.dc_id}"
+        except Exception:
+            pass
+
         file_mb = float(os.environ.get("BENCHMARK_FILE_SIZE_MB", "1956"))
         test_file = f"tg_benchmark_{int(file_mb)}mb.dat"
 
@@ -58,7 +86,7 @@ async def run_telegram_benchmark(bot_token, api_id, api_hash, owner_id):
                 f.write(os.urandom(rem))
 
         # Benchmark Upload
-        print("Measuring Telegram Upload Speed (1.91 GB)...")
+        print(f"Measuring Telegram Upload Speed (1.91 GB) [Bot: {bot_dc} | Owner: {owner_dc}]...")
         up_tracker = SpeedTracker("Upload")
         start_up = time.time()
         msg = await app.send_document(
@@ -76,7 +104,7 @@ async def run_telegram_benchmark(bot_token, api_id, api_hash, owner_id):
             os.remove(test_file)
 
         # Benchmark Download
-        print("Measuring Telegram Download Speed (1.91 GB)...")
+        print(f"Measuring Telegram Download Speed (1.91 GB)...")
         down_tracker = SpeedTracker("Download")
         start_down = time.time()
         down_path = await app.download_media(
@@ -93,21 +121,20 @@ async def run_telegram_benchmark(bot_token, api_id, api_hash, owner_id):
             os.remove(down_path)
 
         await app.stop()
-        return down_avg, down_peak, up_avg, up_peak
+        return down_avg, down_peak, up_avg, up_peak, bot_dc, owner_dc
     except Exception as e:
         print(f"Telegram Benchmark Error: {e}")
-        return 0.0, 0.0, 0.0, 0.0
+        return 0.0, 0.0, 0.0, 0.0, bot_dc, owner_dc
 
-def update_readme(down_avg, down_peak, up_avg, up_peak, loc):
+def update_readme(down_avg, down_peak, up_avg, up_peak, bot_dc, owner_dc, runner_loc):
     readme_path = "README.md"
     if not os.path.exists(readme_path):
         return
 
-    region = "Europe (DC4)" if loc in ["EU", "DC4"] else "USA (DC1)"
     ts = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
     block = f"""<!-- SPEEDTEST_START -->
 ### ⚡ Telegram Speed Benchmark (1.91 GB)
-*Region: **{region}** | Updated: {ts}*
+*Bot DC: **{bot_dc}** | Owner DC: **{owner_dc}** | Runner Server: **{runner_loc}** | Updated: {ts}*
 
 | Benchmark | Avg Speed | Peak Speed |
 |---|---|---|
@@ -124,17 +151,19 @@ def update_readme(down_avg, down_peak, up_avg, up_peak, loc):
             f.write(pattern.sub(block, content))
 
 async def main():
-    loc = os.environ.get("TG_DC_LOCATION", "EU").upper()
+    runner_loc = await get_runner_location()
     bot_token = os.environ.get("BOT_TOKEN")
     api_id = os.environ.get("TELEGRAM_API")
     api_hash = os.environ.get("TELEGRAM_HASH")
     owner_id = os.environ.get("OWNER_ID")
 
     down_avg, down_peak, up_avg, up_peak = 0.0, 0.0, 0.0, 0.0
-    if bot_token and api_id and api_hash and owner_id:
-        down_avg, down_peak, up_avg, up_peak = await run_telegram_benchmark(bot_token, api_id, api_hash, owner_id)
+    bot_dc, owner_dc = "Unknown", "Unknown"
 
-    update_readme(down_avg, down_peak, up_avg, up_peak, loc)
+    if bot_token and api_id and api_hash and owner_id:
+        down_avg, down_peak, up_avg, up_peak, bot_dc, owner_dc = await run_telegram_benchmark(bot_token, api_id, api_hash, owner_id)
+
+    update_readme(down_avg, down_peak, up_avg, up_peak, bot_dc, owner_dc, runner_loc)
 
 if __name__ == "__main__":
     asyncio.run(main())

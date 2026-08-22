@@ -32,7 +32,7 @@
 
 <!-- SPEEDTEST_START -->
 ### ⚡ Telegram Speed Benchmark (1.91 GB)
-*Region: **Europe (DC4)** | Last Run: Pending workflow execution*
+*Bot DC: **--** | Owner DC: **--** | Runner Server: **--** | Last Run: Pending workflow execution*
 
 | Benchmark | Avg Speed | Peak Speed |
 |---|---|---|

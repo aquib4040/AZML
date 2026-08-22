@@ -45,8 +45,8 @@ from bot.helper.telegram_helper.message_utils import (
 )
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.bot_utils import setInterval, sync_to_async, new_thread
+from bot.helper.telegram_helper.button_build import ButtonMaker, to_small_caps
+from bot.helper.ext_utils.bot_utils import setInterval, sync_to_async, new_thread, get_readable_time
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.task_manager import start_from_queued
 from bot.helper.ext_utils.help_messages import default_desp
@@ -811,29 +811,127 @@ async def load_config():
 async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
     buttons = ButtonMaker()
     if key is None:
-        buttons.ibutton("Config Variables", "botset var")
-        buttons.ibutton("Private Files", "botset private")
-        buttons.ibutton("Qbit Settings", "botset qbit")
-        buttons.ibutton("Aria2c Settings", "botset aria")
-        buttons.ibutton("Close", "botset close")
-        msg = "<b><i>Bot Settings:</i></b>"
+        buttons.ibutton(f"🛠️ {to_small_caps('Config Vars')}", "botset var", style="primary")
+        buttons.ibutton(f"📁 {to_small_caps('Private Files')}", "botset private", style="primary")
+        buttons.ibutton(f"🧲 {to_small_caps('Qbit Settings')}", "botset qbit", style="primary")
+        buttons.ibutton(f"📥 {to_small_caps('Aria2c Settings')}", "botset aria", style="primary")
+        buttons.ibutton(f"🔗 {to_small_caps('Shortener Settings')}", "botset shortener", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", style="danger")
+        msg = "⌬ <b><u>ʙᴏᴛ sᴇᴛᴛɪɴɢs :</u></b>"
+    elif key == "shortener":
+        token_timeout = config_dict.get("TOKEN_TIMEOUT", "")
+        is_active = bool(
+            token_timeout
+            and int(token_timeout) > 0
+            if str(token_timeout).isdigit()
+            else False
+        )
+        timeout_str = (
+            get_readable_time(int(token_timeout))
+            if is_active
+            else "Disabled (None)"
+        )
+        shrts_count = len(shorteners_list)
+        msg = "⌬ <b><u>sʜᴏʀᴛᴇɴᴇʀ sᴇᴛᴛɪɴɢs :</u></b>\n\n"
+        msg += f"┎ <b>Shortener Access :</b> <code>{'🟢 Enabled' if is_active else '🔴 Disabled'}</code>\n"
+        msg += f"┠ <b>Token Validity :</b> <code>{timeout_str}</code>\n"
+        msg += f"┖ <b>Total Shortener(s) :</b> <code>{shrts_count}</code>\n\n"
+        if shorteners_list:
+            msg += "➲ <b><u>Active Shortener(s) :</u></b>\n"
+            for i, sh in enumerate(shorteners_list, start=1):
+                domain = sh.get("domain", "")
+                api_key = sh.get("api_key", "")
+                masked_api = (
+                    f"{api_key[:4]}***{api_key[-4:]}"
+                    if len(api_key) > 8
+                    else ("***" if api_key else "Not Set")
+                )
+                msg += f"• <code>{i}. {domain}</code> | <i>Key:</i> <code>{masked_api}</code>\n"
+            msg += "\n"
+        else:
+            msg += "➲ <i>No shorteners configured yet. Add one below!</i>\n\n"
+        msg += "➲ <b>Description:</b> <i>When enabled, normal users must pass the shortener to get token access for leech/mirror tasks.</i>"
+        if is_active:
+            buttons.ibutton(
+                f"🔴 {to_small_caps('Disable Shortener')}", "botset toggleshrt", style="danger"
+            )
+        else:
+            buttons.ibutton(
+                f"🟢 {to_small_caps('Enable Shortener (24h)')}", "botset toggleshrt", style="success"
+            )
+        buttons.ibutton(f"⏱️ {to_small_caps('Set Validity')}", "botset shrtval", style="primary")
+        buttons.ibutton(f"➕ {to_small_caps('Add Shortener')}", "botset addshrt", style="success")
+        if shorteners_list:
+            buttons.ibutton(f"🗑️ {to_small_caps('Remove Shortener')}", "botset rmshrt", style="danger")
+            buttons.ibutton(f"🧹 {to_small_caps('Clear All')}", "botset clearshrt", style="danger")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back", "footer", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", "footer", style="danger")
+    elif key == "shrtval":
+        token_timeout = config_dict.get("TOKEN_TIMEOUT", "")
+        current_val = (
+            get_readable_time(int(token_timeout))
+            if str(token_timeout).isdigit() and int(token_timeout) > 0
+            else "Disabled"
+        )
+        msg = "⌬ <b><u>ᴛᴏᴋᴇɴ ᴠᴀʟɪᴅɪᴛʏ sᴇᴛᴛɪɴɢs :</u></b>\n\n"
+        msg += f"➲ <b>Current Validity :</b> <code>{current_val}</code>\n\n"
+        msg += "<i>Select a preset validity duration or enter custom:</i>"
+        buttons.ibutton(f"⏱️ {to_small_caps('24 Hours (Default)')}", "botset setval 86400", style="primary")
+        buttons.ibutton(f"⏱️ {to_small_caps('12 Hours')}", "botset setval 43200", style="primary")
+        buttons.ibutton(f"⏱️ {to_small_caps('6 Hours')}", "botset setval 21600", style="primary")
+        buttons.ibutton(f"⏱️ {to_small_caps('1 Hour')}", "botset setval 3600", style="primary")
+        buttons.ibutton(f"✏️ {to_small_caps('Custom Duration')}", "botset customval", style="success")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset shortener", "footer", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", "footer", style="danger")
+    elif key == "rmshrt":
+        msg = "⌬ <b><u>ʀᴇᴍᴏᴠᴇ sʜᴏʀᴛᴇɴᴇʀ :</u></b>\n\n<i>Click on a shortener to remove it:</i>"
+        for idx, sh in enumerate(shorteners_list):
+            domain = sh.get("domain", "")[:25]
+            buttons.ibutton(f"🗑️ {to_small_caps(domain)}", f"botset delshrt {idx}", style="danger")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset shortener", "footer", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", "footer", style="danger")
+    elif key == "addshrt_prompt":
+        msg = (
+            "⌬ <b><u>ᴀᴅᴅ sʜᴏʀᴛᴇɴᴇʀ :</u></b>\n\n"
+            "➲ <b>Format:</b> <code>domain api_key</code>\n"
+            "➲ <b>Example 1:</b> <code>droplink.co 74582f7c00e1234567890</code>\n"
+            "➲ <b>Example 2 (Template):</b> <code>https://api.shareus.io/short?api=%s&url=%s my_api_key</code>\n\n"
+            "<i>Send your shortener domain and API key now:</i>\n"
+            "<b>Timeout:</b> 60 sec"
+        )
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset shortener", "footer", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", "footer", style="danger")
+    elif key == "customval_prompt":
+        msg = (
+            "⌬ <b><u>ᴄᴜsᴛᴏᴍ ᴛᴏᴋᴇɴ ᴠᴀʟɪᴅɪᴛʏ :</u></b>\n\n"
+            "➲ <b>Examples:</b>\n"
+            "• <code>24h</code> (24 Hours)\n"
+            "• <code>12h</code> (12 Hours)\n"
+            "• <code>2d</code> (2 Days)\n"
+            "• <code>86400</code> (seconds)\n\n"
+            "<i>Send your custom validity duration now:</i>\n"
+            "<b>Timeout:</b> 60 sec"
+        )
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset shrtval", "footer", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", "footer", style="danger")
     elif key == "var":
         for k in list(OrderedDict(sorted(config_dict.items())).keys())[
             START : 10 + START
         ]:
-            buttons.ibutton(k, f"botset editvar {k}")
-        buttons.ibutton("Back", "botset back")
-        buttons.ibutton("Close", "botset close")
+            buttons.ibutton(f"🔹 {to_small_caps(k)}", f"botset editvar {k}", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", style="danger")
         for x in range(0, len(config_dict) - 1, 10):
             buttons.ibutton(
-                f"{int(x/10)+1}", f"botset start var {x}", position="footer"
+                f"« {int(x/10)+1} »", f"botset start var {x}", position="footer"
             )
-        msg = f"<b>Config Variables</b> | <b>Page: {int(START/10)+1}</b>"
+        msg = f"⌬ <b><u>ᴄᴏɴғɪɢ ᴠᴀʀɪᴀʙʟᴇs</u></b> | <b>Page: {int(START/10)+1}</b>"
     elif key == "private":
-        buttons.ibutton("Back", "botset back")
-        buttons.ibutton("Close", "botset close")
-        msg = """<u>Send any of these private files:</u>
-        
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", style="danger")
+        msg = """⌬ <b><u>ᴘʀɪᴠᴀᴛᴇ ғɪʟᴇs :</u></b>
+
+<u>Send any of these private files:</u>
 <code>config.env, token.pickle, accounts.zip, list_drives.txt, categories.txt, shorteners.txt, cookies.txt, terabox.txt, .netrc or any other file!</code>
 
 <i>To delete private file send only the file name as text message with or without extension.</i>
@@ -842,56 +940,56 @@ async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
 <b>Timeout:</b> 60 sec"""
     elif key == "aria":
         for k in list(aria2_options.keys())[START : 10 + START]:
-            buttons.ibutton(k, f"botset editaria {k}")
+            buttons.ibutton(f"🔹 {to_small_caps(k)}", f"botset editaria {k}", style="primary")
         if STATE == "view":
-            buttons.ibutton("Edit", "botset edit aria")
+            buttons.ibutton(f"✏️ {to_small_caps('Edit')}", "botset edit aria", style="success")
         else:
-            buttons.ibutton("View", "botset view aria")
-        buttons.ibutton("Add New key", "botset editaria newkey")
-        buttons.ibutton("Back", "botset back")
-        buttons.ibutton("Close", "botset close")
+            buttons.ibutton(f"👁️ {to_small_caps('View')}", "botset view aria", style="primary")
+        buttons.ibutton(f"➕ {to_small_caps('Add New key')}", "botset editaria newkey", style="success")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", style="danger")
         for x in range(0, len(aria2_options) - 1, 10):
             buttons.ibutton(
-                f"{int(x/10)+1}", f"botset start aria {x}", position="footer"
+                f"« {int(x/10)+1} »", f"botset start aria {x}", position="footer"
             )
-        msg = f"Aria2c Options | Page: {int(START/10)+1} | State: {STATE}"
+        msg = f"⌬ <b><u>ᴀʀɪᴀ2ᴄ ᴏᴘᴛɪᴏɴs</u></b> | <b>Page: {int(START/10)+1}</b> | <b>State:</b> <code>{STATE}</code>"
     elif key == "qbit":
         for k in list(qbit_options.keys())[START : 10 + START]:
-            buttons.ibutton(k, f"botset editqbit {k}")
+            buttons.ibutton(f"🔹 {to_small_caps(k)}", f"botset editqbit {k}", style="primary")
         if STATE == "view":
-            buttons.ibutton("Edit", "botset edit qbit")
+            buttons.ibutton(f"✏️ {to_small_caps('Edit')}", "botset edit qbit", style="success")
         else:
-            buttons.ibutton("View", "botset view qbit")
-        buttons.ibutton("Back", "botset back")
-        buttons.ibutton("Close", "botset close")
+            buttons.ibutton(f"👁️ {to_small_caps('View')}", "botset view qbit", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", style="danger")
         for x in range(0, len(qbit_options) - 1, 10):
             buttons.ibutton(
-                f"{int(x/10)+1}", f"botset start qbit {x}", position="footer"
+                f"« {int(x/10)+1} »", f"botset start qbit {x}", position="footer"
             )
-        msg = f"Qbittorrent Options | Page: {int(START/10)+1} | State: {STATE}"
+        msg = f"⌬ <b><u>ǫʙɪᴛᴛᴏʀʀᴇɴᴛ ᴏᴘᴛɪᴏɴs</u></b> | <b>Page: {int(START/10)+1}</b> | <b>State:</b> <code>{STATE}</code>"
     elif edit_type == "editvar":
-        msg = f"<b>Variable:</b> <code>{key}</code>\n\n"
+        msg = f"⌬ <b><u>ᴠᴀʀɪᴀʙʟᴇ:</u></b> <code>{key}</code>\n\n"
         msg += f'<b>Description:</b> {default_desp.get(key, "No Description Provided")}\n\n'
         if mess.chat.type == ChatType.PRIVATE:
             msg += (
-                f'<b>Value:</b> <spoiler> {config_dict.get(key, "None")} </spoiler>\n\n'
+                f'<b>Value:</b> <tg-spoiler> {config_dict.get(key, "None")} </tg-spoiler>\n\n'
             )
         else:
             buttons.ibutton(
-                "View Var Value", f"botset showvar {key}", position="header"
+                f"👁️ {to_small_caps('View Var Value')}", f"botset showvar {key}", position="header", style="primary"
             )
-        buttons.ibutton("Back", "botset back var", position="footer")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back var", position="footer", style="primary")
         if key not in bool_vars:
             if not edit_mode:
-                buttons.ibutton("Edit Value", f"botset editvar {key} edit")
+                buttons.ibutton(f"✏️ {to_small_caps('Edit Value')}", f"botset editvar {key} edit", style="success")
             else:
-                buttons.ibutton("Stop Edit", f"botset editvar {key}")
+                buttons.ibutton(f"🛑 {to_small_caps('Stop Edit')}", f"botset editvar {key}", style="danger")
         if (
             key not in ["TELEGRAM_HASH", "TELEGRAM_API", "OWNER_ID", "BOT_TOKEN"]
             and key not in bool_vars
         ):
-            buttons.ibutton("Reset", f"botset resetvar {key}")
-        buttons.ibutton("Close", "botset close", position="footer")
+            buttons.ibutton(f"🔄 {to_small_caps('Reset')}", f"botset resetvar {key}", style="danger")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", position="footer", style="danger")
         if edit_mode and key in [
             "SUDO_USERS",
             "CMD_SUFFIX",
@@ -908,31 +1006,73 @@ async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
         if edit_mode and key not in bool_vars:
             msg += "<i>Send a valid value for the above Var.</i> <b>Timeout:</b> 60 sec"
         if key in bool_vars:
-            msg += "<i>Choose a valid value for the above Var</i>"
-            buttons.ibutton("True", f"botset boolvar {key} on")
-            buttons.ibutton("False", f"botset boolvar {key} off")
+            msg += "<i>Choose a valid value for the above Var:</i>"
+            buttons.ibutton(f"🟢 {to_small_caps('True')}", f"botset boolvar {key} on", style="success")
+            buttons.ibutton(f"🔴 {to_small_caps('False')}", f"botset boolvar {key} off", style="danger")
     elif edit_type == "editaria":
-        buttons.ibutton("Back", "botset back aria")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back aria", style="primary")
         if key != "newkey":
-            buttons.ibutton("Default", f"botset resetaria {key}")
-            buttons.ibutton("Empty String", f"botset emptyaria {key}")
-        buttons.ibutton("Close", "botset close")
+            buttons.ibutton(f"⚙️ {to_small_caps('Default')}", f"botset resetaria {key}", style="primary")
+            buttons.ibutton(f"📝 {to_small_caps('Empty String')}", f"botset emptyaria {key}", style="danger")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", style="danger")
         if key == "newkey":
             msg = "Send a key with value. Example: https-proxy-user:value"
         else:
             msg = f"Send a valid value for {key}. Timeout: 60 sec"
     elif edit_type == "editqbit":
-        buttons.ibutton("Back", "botset back qbit")
-        buttons.ibutton("Empty String", f"botset emptyqbit {key}")
-        buttons.ibutton("Close", "botset close")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back qbit", style="primary")
+        buttons.ibutton(f"📝 {to_small_caps('Empty String')}", f"botset emptyqbit {key}", style="danger")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", style="danger")
         msg = f"Send a valid value for {key}. Timeout: 60 sec"
-    button = buttons.build_menu(1) if key is None else buttons.build_menu(2)
+    button = buttons.build_menu(2)
     return msg, button
 
 
 async def update_buttons(message, key=None, edit_type=None, edit_mode=None):
     msg, button = await get_buttons(key, edit_type, edit_mode, message)
     await editMessage(message, msg, button)
+
+
+async def add_shortener_handler(_, message, pre_message):
+    handler_dict[message.chat.id] = False
+    text = message.text.strip()
+    if text:
+        parts = text.split(maxsplit=1)
+        if len(parts) == 2:
+            domain, api_key = parts[0].strip(), parts[1].strip()
+        else:
+            domain, api_key = parts[0].strip(), ""
+        shorteners_list.append({"domain": domain, "api_key": api_key})
+        async with aiopen("shorteners.txt", "w") as f:
+            for sh in shorteners_list:
+                await f.write(f"{sh['domain']} {sh['api_key']}\n")
+        if DATABASE_URL:
+            await DbManger().update_private_file("shorteners.txt")
+    await update_buttons(pre_message, "shortener")
+    await deleteMessage(message)
+
+
+async def edit_custom_timeout_handler(_, message, pre_message):
+    handler_dict[message.chat.id] = False
+    text = message.text.strip().lower()
+    if text:
+        if text.endswith("h"):
+            seconds = int(float(text[:-1]) * 3600)
+        elif text.endswith("d"):
+            seconds = int(float(text[:-1]) * 86400)
+        elif text.endswith("m"):
+            seconds = int(float(text[:-1]) * 60)
+        elif text.endswith("s"):
+            seconds = int(text[:-1])
+        elif text.isdigit():
+            seconds = int(text)
+        else:
+            seconds = 86400
+        config_dict["TOKEN_TIMEOUT"] = seconds
+        if DATABASE_URL:
+            await DbManger().update_config({"TOKEN_TIMEOUT": seconds})
+    await update_buttons(pre_message, "shortener")
+    await deleteMessage(message)
 
 
 async def edit_variable(_, message, pre_message, key):
@@ -1202,8 +1342,8 @@ async def update_private_file(_, message, pre_message):
         if "@github.com" in config_dict["UPSTREAM_REPO"]:
             buttons = ButtonMaker()
             msg = "<i>Do you want to Upload (Git Push) your file to <b>UPSTREAM_REPO</b> ?</i>"
-            buttons.ibutton("Yes!", f"botset push {file_name}")
-            buttons.ibutton("No!", "botset close")
+            buttons.ibutton(f"✅ {to_small_caps('Yes!')}", f"botset push {file_name}")
+            buttons.ibutton(f"❌ {to_small_caps('No!')}", "botset close")
             await sendMessage(message, msg, buttons.build_menu(2))
         else:
             await deleteMessage(message)
@@ -1256,9 +1396,67 @@ async def edit_bot_settings(client, query):
         if key is None:
             globals()["START"] = 0
         await update_buttons(message, key)
-    elif data[1] in ["var", "aria", "qbit"]:
+    elif data[1] in ["var", "aria", "qbit", "shortener", "shrtval", "rmshrt"]:
+        handler_dict[message.chat.id] = False
         await query.answer()
         await update_buttons(message, data[1])
+    elif data[1] == "toggleshrt":
+        handler_dict[message.chat.id] = False
+        token_timeout = config_dict.get("TOKEN_TIMEOUT", "")
+        if str(token_timeout).isdigit() and int(token_timeout) > 0:
+            config_dict["TOKEN_TIMEOUT"] = ""
+            if DATABASE_URL:
+                await DbManger().update_config({"TOKEN_TIMEOUT": ""})
+            await query.answer("Shortener Disabled!", show_alert=True)
+        else:
+            config_dict["TOKEN_TIMEOUT"] = 86400
+            if DATABASE_URL:
+                await DbManger().update_config({"TOKEN_TIMEOUT": 86400})
+            await query.answer("Shortener Enabled with 24 Hours validity!", show_alert=True)
+        await update_buttons(message, "shortener")
+    elif data[1] == "setval":
+        handler_dict[message.chat.id] = False
+        seconds = int(data[2])
+        config_dict["TOKEN_TIMEOUT"] = seconds
+        if DATABASE_URL:
+            await DbManger().update_config({"TOKEN_TIMEOUT": seconds})
+        await query.answer(f"Validity set to {get_readable_time(seconds)}!", show_alert=True)
+        await update_buttons(message, "shortener")
+    elif data[1] == "customval":
+        handler_dict[message.chat.id] = False
+        await query.answer()
+        await update_buttons(message, "customval_prompt")
+        pfunc = partial(edit_custom_timeout_handler, pre_message=message)
+        rfunc = partial(update_buttons, message, "shrtval")
+        await event_handler(client, query, pfunc, rfunc)
+    elif data[1] == "addshrt":
+        handler_dict[message.chat.id] = False
+        await query.answer()
+        await update_buttons(message, "addshrt_prompt")
+        pfunc = partial(add_shortener_handler, pre_message=message)
+        rfunc = partial(update_buttons, message, "shortener")
+        await event_handler(client, query, pfunc, rfunc)
+    elif data[1] == "delshrt":
+        handler_dict[message.chat.id] = False
+        idx = int(data[2])
+        if 0 <= idx < len(shorteners_list):
+            removed = shorteners_list.pop(idx)
+            async with aiopen("shorteners.txt", "w") as f:
+                for sh in shorteners_list:
+                    await f.write(f"{sh['domain']} {sh['api_key']}\n")
+            if DATABASE_URL:
+                await DbManger().update_private_file("shorteners.txt")
+            await query.answer(f"Removed {removed['domain']}!", show_alert=True)
+        await update_buttons(message, "shortener")
+    elif data[1] == "clearshrt":
+        handler_dict[message.chat.id] = False
+        shorteners_list.clear()
+        if await aiopath.exists("shorteners.txt"):
+            await remove("shorteners.txt")
+        if DATABASE_URL:
+            await DbManger().update_private_file("shorteners.txt")
+        await query.answer("Cleared all shorteners!", show_alert=True)
+        await update_buttons(message, "shortener")
     elif data[1] == "resetvar":
         handler_dict[message.chat.id] = False
         await query.answer("Reset Done!", show_alert=True)

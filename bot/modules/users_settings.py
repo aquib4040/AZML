@@ -38,7 +38,7 @@ from bot.helper.telegram_helper.message_utils import (
 )
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.telegram_helper.button_build import ButtonMaker
+from bot.helper.telegram_helper.button_build import ButtonMaker, to_small_caps
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.bot_utils import (
@@ -193,25 +193,26 @@ fname_dict = {
 
 async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None):
     user_id = from_user.id
-    name = from_user.mention(style="html")
+    user_name = from_user.first_name + (f" {from_user.last_name}" if from_user.last_name else "")
+    name = f'<a href="tg://user?id={user_id}">{escape(user_name)}</a>'
     buttons = ButtonMaker()
     thumbpath = f"Thumbnails/{user_id}.jpg"
     rclone_path = f"rclone/{user_id}.conf"
     user_dict = user_data.get(user_id, {})
     if key is None:
-        buttons.ibutton("Universal Settings", f"userset {user_id} universal")
-        buttons.ibutton("Mirror Settings", f"userset {user_id} mirror")
-        buttons.ibutton("Leech Settings", f"userset {user_id} leech")
-        buttons.ibutton("Personal Upload Bot", f"userset {user_id} personal_bot")
+        buttons.ibutton(f"🌐 {to_small_caps('Universal Settings')}", f"userset {user_id} universal", style="primary")
+        buttons.ibutton(f"☁️ {to_small_caps('Mirror Settings')}", f"userset {user_id} mirror", style="primary")
+        buttons.ibutton(f"⚡ {to_small_caps('Leech Settings')}", f"userset {user_id} leech", style="primary")
+        buttons.ibutton(f"🤖 {to_small_caps('Personal Bot')}", f"userset {user_id} personal_bot", style="primary")
         if user_dict and any(key in user_dict for key in list(fname_dict.keys())):
-            buttons.ibutton("Reset Setting", f"userset {user_id} reset_all")
-        buttons.ibutton("Close", f"userset {user_id} close")
+            buttons.ibutton(f"🔄 {to_small_caps('Reset Settings')}", f"userset {user_id} reset_all", style="danger")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", style="danger")
 
         text = BotTheme(
             "USER_SETTING",
             NAME=name,
             ID=user_id,
-            USERNAME=f"@{from_user.username}",
+            USERNAME=f"@{from_user.username}" if from_user.username else "N/A",
             LANG=(
                 Language.get(lc).display_name()
                 if (lc := from_user.language_code)
@@ -220,7 +221,7 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             DC=from_user.dc_id,
         )
 
-        button = buttons.build_menu(1)
+        button = buttons.build_menu(2)
     elif key == "universal":
         ytopt = (
             "Not Exists"
@@ -229,20 +230,20 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             else val
         )
         buttons.ibutton(
-            f"{'✅️' if ytopt != 'Not Exists' else ''} YT-DLP Options",
-            f"userset {user_id} yt_opt",
+            f"{'✅' if ytopt != 'Not Exists' else '⚙️'} {to_small_caps('YT-DLP Options')}",
+            f"userset {user_id} yt_opt", style="primary",
         )
         u_sess = "Exists" if user_dict.get("usess", False) else "Not Exists"
         buttons.ibutton(
-            f"{'✅️' if u_sess != 'Not Exists' else ''} User Session",
-            f"userset {user_id} usess",
+            f"{'✅' if u_sess != 'Not Exists' else '👤'} {to_small_caps('User Session')}",
+            f"userset {user_id} usess", style="primary",
         )
         bot_pm = (
             "Enabled" if user_dict.get("bot_pm", config_dict["BOT_PM"]) else "Disabled"
         )
         buttons.ibutton(
-            "Disable Bot PM" if bot_pm == "Enabled" else "Enable Bot PM",
-            f"userset {user_id} bot_pm",
+            f"🔴 {to_small_caps('Disable Bot PM')}" if bot_pm == "Enabled" else f"🟢 {to_small_caps('Enable Bot PM')}",
+            f"userset {user_id} bot_pm", style="success" if bot_pm != "Enabled" else "danger",
         )
         if config_dict["BOT_PM"]:
             bot_pm = "Force Enabled"
@@ -252,15 +253,15 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             else "Disabled"
         )
         buttons.ibutton(
-            "Disable MediaInfo" if mediainfo == "Enabled" else "Enable MediaInfo",
-            f"userset {user_id} mediainfo",
+            f"🔴 {to_small_caps('Disable MediaInfo')}" if mediainfo == "Enabled" else f"🟢 {to_small_caps('Enable MediaInfo')}",
+            f"userset {user_id} mediainfo", style="success" if mediainfo != "Enabled" else "danger",
         )
         if config_dict["SHOW_MEDIAINFO"]:
             mediainfo = "Force Enabled"
         save_mode = "Save As Dump" if user_dict.get("save_mode") else "Save As BotPM"
         buttons.ibutton(
-            "Save As BotPM" if save_mode == "Save As Dump" else "Save As Dump",
-            f"userset {user_id} save_mode",
+            f"📦 {to_small_caps('Save As BotPM')}" if save_mode == "Save As Dump" else f"💾 {to_small_caps('Save As Dump')}",
+            f"userset {user_id} save_mode", style="primary",
         )
         dailytl = config_dict["DAILY_TASK_LIMIT"] or "∞"
         dailytas = (
@@ -288,11 +289,11 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             SAVE_MODE=save_mode,
             USESS=u_sess,
         )
-        buttons.ibutton("Back", f"userset {user_id} back", "footer")
-        buttons.ibutton("Close", f"userset {user_id} close", "footer")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back", "footer", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         button = buttons.build_menu(2)
     elif key == "mirror":
-        buttons.ibutton("RClone", f"userset {user_id} rcc")
+        buttons.ibutton(f"{'✅' if await aiopath.exists(rclone_path) else '☁️'} {to_small_caps('RClone')}", f"userset {user_id} rcc", style="primary")
         rccmsg = "Exists" if await aiopath.exists(rclone_path) else "Not Exists"
         dailytlup = (
             get_readable_file_size(config_dict["DAILY_MIRROR_LIMIT"] * 1024**3)
@@ -304,7 +305,6 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             if config_dict["DAILY_MIRROR_LIMIT"] and user_id != OWNER_ID
             else "️∞"
         )
-        buttons.ibutton("Mirror Prefix", f"userset {user_id} mprefix")
         mprefix = (
             "Not Exists"
             if (
@@ -315,8 +315,8 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             == ""
             else val
         )
+        buttons.ibutton(f"{'✅' if mprefix != 'Not Exists' else '✏️'} {to_small_caps('Mirror Prefix')}", f"userset {user_id} mprefix", style="primary")
 
-        buttons.ibutton("Mirror Suffix", f"userset {user_id} msuffix")
         msuffix = (
             "Not Exists"
             if (
@@ -327,8 +327,8 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             == ""
             else val
         )
+        buttons.ibutton(f"{'✅' if msuffix != 'Not Exists' else '✏️'} {to_small_caps('Mirror Suffix')}", f"userset {user_id} msuffix", style="primary")
 
-        buttons.ibutton("Mirror Remname", f"userset {user_id} mremname")
         mremname = (
             "Not Exists"
             if (
@@ -339,16 +339,17 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             == ""
             else val
         )
+        buttons.ibutton(f"{'✅' if mremname != 'Not Exists' else '✏️'} {to_small_caps('Mirror Remname')}", f"userset {user_id} mremname", style="primary")
 
         ddl_serv = len(val) if (val := user_dict.get("ddl_servers", False)) else 0
-        buttons.ibutton("DDL Servers", f"userset {user_id} ddl_servers")
+        buttons.ibutton(f"🌐 {to_small_caps('DDL Servers')}", f"userset {user_id} ddl_servers", style="primary")
 
         tds_mode = "Enabled" if user_dict.get("td_mode", False) else "Disabled"
         if not config_dict["USER_TD_MODE"]:
             tds_mode = "Force Disabled"
 
         user_tds = len(val) if (val := user_dict.get("user_tds", False)) else 0
-        buttons.ibutton("User TDs", f"userset {user_id} user_tds")
+        buttons.ibutton(f"📂 {to_small_caps('User TDs')}", f"userset {user_id} user_tds", style="primary")
 
         text = BotTheme(
             "MIRROR",
@@ -363,8 +364,8 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             USERTD=user_tds,
         )
 
-        buttons.ibutton("Back", f"userset {user_id} back", "footer")
-        buttons.ibutton("Close", f"userset {user_id} close", "footer")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back", "footer", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         button = buttons.build_menu(2)
     elif key == "leech":
         if (
@@ -373,10 +374,10 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             and config_dict["AS_DOCUMENT"]
         ):
             ltype = "DOCUMENT"
-            buttons.ibutton("Send As Media", f"userset {user_id} doc")
+            buttons.ibutton(f"🎬 {to_small_caps('Send As Media')}", f"userset {user_id} doc", style="primary")
         else:
             ltype = "MEDIA"
-            buttons.ibutton("Send As Document", f"userset {user_id} doc")
+            buttons.ibutton(f"📄 {to_small_caps('Send As Document')}", f"userset {user_id} doc", style="primary")
 
         dailytlle = (
             get_readable_file_size(config_dict["DAILY_LEECH_LIMIT"] * 1024**3)
@@ -391,8 +392,8 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
 
         thumbmsg = "Exists" if await aiopath.exists(thumbpath) else "Not Exists"
         buttons.ibutton(
-            f"{'✅️' if thumbmsg == 'Exists' else ''} Thumbnail",
-            f"userset {user_id} thumb",
+            f"{'✅' if thumbmsg == 'Exists' else '🖼️'} {to_small_caps('Thumbnail')}",
+            f"userset {user_id} thumb", style="primary",
         )
 
         split_size = (
@@ -411,8 +412,8 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             else "Disabled"
         )
         buttons.ibutton(
-            f"{'✅️' if user_dict.get('split_size') else ''} Leech Splits",
-            f"userset {user_id} split_size",
+            f"{'✅' if user_dict.get('split_size') else '✂️'} {to_small_caps('Leech Splits')}",
+            f"userset {user_id} split_size", style="primary",
         )
 
         lcaption = (
@@ -426,8 +427,8 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             else val
         )
         buttons.ibutton(
-            f"{'✅️' if lcaption != 'Not Exists' else ''} Leech Caption",
-            f"userset {user_id} lcaption",
+            f"{'✅' if lcaption != 'Not Exists' else '📝'} {to_small_caps('Leech Caption')}",
+            f"userset {user_id} lcaption", style="primary",
         )
 
         lprefix = (
@@ -441,8 +442,8 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             else val
         )
         buttons.ibutton(
-            f"{'✅️' if lprefix != 'Not Exists' else ''} Leech Prefix",
-            f"userset {user_id} lprefix",
+            f"{'✅' if lprefix != 'Not Exists' else '✏️'} {to_small_caps('Leech Prefix')}",
+            f"userset {user_id} lprefix", style="primary",
         )
 
         lsuffix = (
@@ -456,8 +457,8 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             else val
         )
         buttons.ibutton(
-            f"{'✅️' if lsuffix != 'Not Exists' else ''} Leech Suffix",
-            f"userset {user_id} lsuffix",
+            f"{'✅' if lsuffix != 'Not Exists' else '✏️'} {to_small_caps('Leech Suffix')}",
+            f"userset {user_id} lsuffix", style="primary",
         )
 
         # AutoRename Template (template-based)
@@ -472,8 +473,8 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             else val
         )
         buttons.ibutton(
-            f"{'✅️' if lremname_auto != 'Not Exists' else ''} AutoRename Template",
-            f"userset {user_id} lremname_auto",
+            f"{'✅' if lremname_auto != 'Not Exists' else '🏷️'} {to_small_caps('AutoRename Template')}",
+            f"userset {user_id} lremname_auto", style="primary",
         )
 
         # Regex Remname (regex-based)
@@ -488,33 +489,33 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             else val
         )
         buttons.ibutton(
-            f"{'✅️' if lremname_regex != 'Not Exists' else ''} Regex Remname",
-            f"userset {user_id} lremname_regex",
+            f"{'✅' if lremname_regex != 'Not Exists' else '🔍'} {to_small_caps('Regex Remname')}",
+            f"userset {user_id} lremname_regex", style="primary",
         )
 
         # Rename Method toggle (only show if both exist)
         if lremname_auto != "Not Exists" and lremname_regex != "Not Exists":
             rename_method = user_dict.get("rename_method", "auto")
             buttons.ibutton(
-                f"Method: {'Auto Rename' if rename_method == 'auto' else 'Regex'}",
-                f"userset {user_id} rename_method",
+                f"🔄 {to_small_caps('Method')}: {to_small_caps('Auto' if rename_method == 'auto' else 'Regex')}",
+                f"userset {user_id} rename_method", style="primary",
             )
 
         # AutoRename toggle
         autorename_enabled = user_dict.get("autorename", True)  # Default: enabled
         buttons.ibutton(
-            "Disable AutoRename" if autorename_enabled else "Enable AutoRename",
-            f"userset {user_id} autorename",
+            f"🔴 {to_small_caps('Disable AutoRename')}" if autorename_enabled else f"🟢 {to_small_caps('Enable AutoRename')}",
+            f"userset {user_id} autorename", style="success" if not autorename_enabled else "danger",
         )
 
         # Auto Thumbnail toggle
         auto_thumb = user_dict.get("auto_thumb", config_dict.get("AUTO_THUMBNAIL", False))
         buttons.ibutton(
-            "Disable Auto Thumbnail" if auto_thumb else "Enable Auto Thumbnail",
-            f"userset {user_id} auto_thumb",
+            f"🔴 {to_small_caps('Disable Auto Thumbnail')}" if auto_thumb else f"🟢 {to_small_caps('Enable Auto Thumbnail')}",
+            f"userset {user_id} auto_thumb", style="success" if not auto_thumb else "danger",
         )
 
-        buttons.ibutton("Leech Dump", f"userset {user_id} ldump")
+        buttons.ibutton(f"📤 {to_small_caps('Leech Dump')}", f"userset {user_id} ldump", style="primary")
         ldump = "Not Exists" if (val := user_dict.get("ldump", "")) == "" else len(val)
 
         lmeta = (
@@ -523,8 +524,8 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             else val
         )
         buttons.ibutton(
-            f"{'✅️' if lmeta != 'Not Exists' else ''} Metadata",
-            f"userset {user_id} lmeta",
+            f"{'✅' if lmeta != 'Not Exists' else '🏷️'} {to_small_caps('Metadata')}",
+            f"userset {user_id} lmeta", style="primary",
         )
         
         # Intro Subtitle button
@@ -532,8 +533,8 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
         has_intro = intro_subtitle.get("text", "") != ""
         intro_enabled = intro_subtitle.get("enabled", True) if has_intro else False
         buttons.ibutton(
-            f"{'✅️' if has_intro and intro_enabled else '❌' if has_intro else ''} 📝 Intro Subtitle",
-            f"userset {user_id} intro_subtitle",
+            f"{'✅' if has_intro and intro_enabled else '❌' if has_intro else '📝'} {to_small_caps('Intro Subtitle')}",
+            f"userset {user_id} intro_subtitle", style="primary",
         )
 
         # FFmpeg Commands button
@@ -542,8 +543,8 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
         if ffmpeg_cmds:
             ffmpeg_status = ", ".join(ffmpeg_cmds.keys())
         buttons.ibutton(
-            f"{'✅️' if ffmpeg_cmds else ''} 🎬 FFmpeg Cmds",
-            f"userset {user_id} ffmpeg_cmds",
+            f"{'✅' if ffmpeg_cmds else '🎬'} {to_small_caps('FFmpeg Cmds')}",
+            f"userset {user_id} ffmpeg_cmds", style="primary",
         )
 
         text = BotTheme(
@@ -567,8 +568,8 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             AUTO_THUMB="Enabled" if auto_thumb else "Disabled",
         )
 
-        buttons.ibutton("Back", f"userset {user_id} back", "footer")
-        buttons.ibutton("Close", f"userset {user_id} close", "footer")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back", "footer", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         button = buttons.build_menu(2)
     elif key == "personal_bot":
         pbot_token = user_dict.get("personal_bot_token", "")
@@ -591,24 +592,24 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
         )
         
         if pbot_token:
-            buttons.ibutton("Disable Bot" if user_dict.get("personal_bot_enabled", False) else "Enable Bot", f"userset {user_id} toggle_pbot")
-            buttons.ibutton("Change Bot Token", f"userset {user_id} pbot_token edit")
-            buttons.ibutton("Remove Bot Token", f"userset {user_id} rm_pbot")
+            buttons.ibutton(f"🔴 {to_small_caps('Disable Bot')}" if user_dict.get("personal_bot_enabled", False) else f"🟢 {to_small_caps('Enable Bot')}", f"userset {user_id} toggle_pbot", style="success" if not user_dict.get("personal_bot_enabled", False) else "danger")
+            buttons.ibutton(f"🔄 {to_small_caps('Change Bot Token')}", f"userset {user_id} pbot_token edit", style="primary")
+            buttons.ibutton(f"🗑️ {to_small_caps('Remove Bot Token')}", f"userset {user_id} rm_pbot", style="danger")
         else:
-            buttons.ibutton("Connect Bot Token", f"userset {user_id} pbot_token edit")
+            buttons.ibutton(f"🔗 {to_small_caps('Connect Bot Token')}", f"userset {user_id} pbot_token edit", style="success")
             
         if pdump_chat:
-            buttons.ibutton("Disable Dump" if user_dict.get("personal_dump_enabled", False) else "Enable Dump", f"userset {user_id} toggle_pdump")
-            buttons.ibutton("Change Dump Channel", f"userset {user_id} pdump_chat edit")
-            buttons.ibutton("Remove Dump Channel", f"userset {user_id} rm_pdump")
+            buttons.ibutton(f"🔴 {to_small_caps('Disable Dump')}" if user_dict.get("personal_dump_enabled", False) else f"🟢 {to_small_caps('Enable Dump')}", f"userset {user_id} toggle_pdump", style="success" if not user_dict.get("personal_dump_enabled", False) else "danger")
+            buttons.ibutton(f"🔄 {to_small_caps('Change Dump Channel')}", f"userset {user_id} pdump_chat edit", style="primary")
+            buttons.ibutton(f"🗑️ {to_small_caps('Remove Dump Channel')}", f"userset {user_id} rm_pdump", style="danger")
         else:
-            buttons.ibutton("Configure Dump Channel", f"userset {user_id} pdump_chat edit")
+            buttons.ibutton(f"📁 {to_small_caps('Configure Dump Channel')}", f"userset {user_id} pdump_chat edit", style="success")
 
         if pbot_token and pdump_chat:
-            buttons.ibutton("Verify Permissions", f"userset {user_id} verify_pbot")
+            buttons.ibutton(f"🛡️ {to_small_caps('Verify Permissions')}", f"userset {user_id} verify_pbot", style="primary")
 
-        buttons.ibutton("Back", f"userset {user_id} back", "footer")
-        buttons.ibutton("Close", f"userset {user_id} close", "footer")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back", "footer", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         button = buttons.build_menu(2)
     elif key == "ddl_servers":
         ddl_serv, serv_list = 0, []
@@ -624,11 +625,11 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
         )
         for btn in ["gofile", "streamtape"]:
             buttons.ibutton(
-                f"{'✅️' if btn in serv_list else ''} {fname_dict[btn]}",
+                f"{'✅' if btn in serv_list else '🌐'} {to_small_caps(fname_dict[btn])}",
                 f"userset {user_id} {btn}",
             )
-        buttons.ibutton("Back", f"userset {user_id} back mirror", "footer")
-        buttons.ibutton("Close", f"userset {user_id} close", "footer")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back mirror", "footer", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         button = buttons.build_menu(2)
     elif edit_type:
         text = f"㊂ <b><u>{fname_dict[key]} Settings :</u></b>\n\n"
@@ -664,21 +665,21 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
                 "equal_splits" not in user_dict and config_dict["EQUAL_SPLITS"]
             ):
                 buttons.ibutton(
-                    "Disable Equal Splits", f"userset {user_id} esplits", "header"
+                    f"🔴 {to_small_caps('Disable Equal Splits')}", f"userset {user_id} esplits", "header"
                 )
             else:
                 buttons.ibutton(
-                    "Enable Equal Splits", f"userset {user_id} esplits", "header"
+                    f"🟢 {to_small_caps('Enable Equal Splits')}", f"userset {user_id} esplits", "header"
                 )
             if user_dict.get("media_group", False) or (
                 "media_group" not in user_dict and config_dict["MEDIA_GROUP"]
             ):
                 buttons.ibutton(
-                    "Disable Media Group", f"userset {user_id} mgroup", "header"
+                    f"🔴 {to_small_caps('Disable Media Group')}", f"userset {user_id} mgroup", "header"
                 )
             else:
                 buttons.ibutton(
-                    "Enable Media Group", f"userset {user_id} mgroup", "header"
+                    f"🟢 {to_small_caps('Enable Media Group')}", f"userset {user_id} mgroup", "header"
                 )
         elif key in ["pbot_token", "pdump_chat"]:
             if key == "pbot_token":
@@ -738,7 +739,7 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
                 f"➲ <b>{fname_dict[key]}'s API Key :</b> {set_exist}\n\n"
             )
             buttons.ibutton(
-                "Disable DDL" if ddl_mode == "Enabled" else "Enable DDL",
+                f"🔴 {to_small_caps('Disable DDL')}" if ddl_mode == "Enabled" else f"🟢 {to_small_caps('Enable DDL')}",
                 f"userset {user_id} s{key}",
                 "header",
             )
@@ -746,7 +747,7 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             set_exist = len(val) if (val := user_dict.get(key, False)) else "Not Exists"
             tds_mode = "Enabled" if user_dict.get("td_mode", False) else "Disabled"
             buttons.ibutton(
-                "Disable UserTDs" if tds_mode == "Enabled" else "Enable UserTDs",
+                f"🔴 {to_small_caps('Disable UserTDs')}" if tds_mode == "Enabled" else f"🟢 {to_small_caps('Enable UserTDs')}",
                 f"userset {user_id} td_mode",
                 "header",
             )
@@ -787,7 +788,7 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
         if not edit_mode:
             buttons.ibutton(
                 (
-                    f"Change {fname_dict[key]}"
+                    f"✏️ {to_small_caps(f'Change {fname_dict[key]}')}"
                     if set_exist
                     and set_exist != "Not Exists"
                     and (
@@ -795,13 +796,13 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
                         != get_readable_file_size(config_dict["LEECH_SPLIT_SIZE"])
                         + " (Default)"
                     )
-                    else f"Set {fname_dict[key]}"
+                    else f"➕ {to_small_caps(f'Set {fname_dict[key]}')}"
                 ),
-                f"userset {user_id} {key} edit",
+                f"userset {user_id} {key} edit", style="success",
             )
         else:
             text += "\n\n" + desp_dict[key][1]
-            buttons.ibutton("Stop Change", f"userset {user_id} {key}")
+            buttons.ibutton(f"🛑 {to_small_caps('Stop Change')}", f"userset {user_id} {key}", style="danger")
         if (
             set_exist
             and set_exist != "Not Exists"
@@ -812,12 +813,12 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             )
         ):
             if key == "thumb":
-                buttons.ibutton("View Thumbnail", f"userset {user_id} vthumb", "header")
+                buttons.ibutton(f"👁️ {to_small_caps('View Thumbnail')}", f"userset {user_id} vthumb", "header", style="primary")
             elif key == "user_tds":
-                buttons.ibutton("Show UserTDs", f"userset {user_id} show_tds", "header")
-            buttons.ibutton("↻ Delete", f"userset {user_id} d{key}")
-        buttons.ibutton("Back", f"userset {user_id} back {edit_type}", "footer")
-        buttons.ibutton("Close", f"userset {user_id} close", "footer")
+                buttons.ibutton(f"📂 {to_small_caps('Show UserTDs')}", f"userset {user_id} show_tds", "header", style="primary")
+            buttons.ibutton(f"🗑️ {to_small_caps('Delete')}", f"userset {user_id} d{key}", style="danger")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back {edit_type}", "footer", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         button = buttons.build_menu(2)
     
     return text, button
@@ -1405,7 +1406,7 @@ async def edit_user_settings(client, query):
         if success:
             update_user_ldata(user_id, "personal_dump_verified", True)
             btn = ButtonMaker()
-            btn.ibutton("OK", f"userset {user_id} personal_bot")
+            btn.ibutton(f"✅ {to_small_caps('OK')}", f"userset {user_id} personal_bot")
             await query.message.edit_text(
                 f"✅ <b>Verification Successful!</b>\n\n{msg}",
                 reply_markup=btn.build_menu(1)
@@ -1413,7 +1414,7 @@ async def edit_user_settings(client, query):
         else:
             update_user_ldata(user_id, "personal_dump_verified", False)
             btn = ButtonMaker()
-            btn.ibutton("Try Again", f"userset {user_id} personal_bot")
+            btn.ibutton(f"🔄 {to_small_caps('Try Again')}", f"userset {user_id} personal_bot")
             await query.message.edit_text(
                 f"❌ <b>Verification Failed!</b>\n\n<b>Error:</b> <code>{escape(msg)}</code>",
                 reply_markup=btn.build_menu(1)
@@ -1442,7 +1443,7 @@ async def edit_user_settings(client, query):
         handler_dict[user_id] = False
         await query.answer()
         buttons = ButtonMaker()
-        buttons.ibutton("Cʟᴏsᴇ", f"wzmlx {user_id} close")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"wzmlx {user_id} close")
         await sendMessage(message, from_user.mention, buttons.build_menu(1), thumb_path)
         await update_user_settings(query, "thumb", "leech")
     elif data[2] == "show_tds":
@@ -1612,21 +1613,21 @@ async def edit_user_settings(client, query):
         # Enable/Disable toggle button (only show if text is set)
         if text != "Not Set":
             buttons.ibutton(
-                "❌ Disable" if is_enabled else "✅ Enable",
-                f"userset {user_id} intro_toggle",
+                f"🔴 {to_small_caps('Disable')}" if is_enabled else f"🟢 {to_small_caps('Enable')}",
+                f"userset {user_id} intro_toggle", style="success" if not is_enabled else "danger",
             )
         
-        buttons.ibutton("Set Text", f"userset {user_id} intro_text")
-        buttons.ibutton("Set Color", f"userset {user_id} intro_color")
-        buttons.ibutton("Set Background", f"userset {user_id} intro_bgcolor")
-        buttons.ibutton("Set Duration", f"userset {user_id} intro_duration")
-        buttons.ibutton("Set Font Size", f"userset {user_id} intro_fontsize")
+        buttons.ibutton(f"✏️ {to_small_caps('Set Text')}", f"userset {user_id} intro_text", style="primary")
+        buttons.ibutton(f"🎨 {to_small_caps('Set Color')}", f"userset {user_id} intro_color", style="primary")
+        buttons.ibutton(f"🖼️ {to_small_caps('Set Background')}", f"userset {user_id} intro_bgcolor", style="primary")
+        buttons.ibutton(f"⏱️ {to_small_caps('Set Duration')}", f"userset {user_id} intro_duration", style="primary")
+        buttons.ibutton(f"🔤 {to_small_caps('Set Font Size')}", f"userset {user_id} intro_fontsize", style="primary")
         
         if text != "Not Set":
-            buttons.ibutton("🗑️ Reset All", f"userset {user_id} intro_reset", "footer")
+            buttons.ibutton(f"🗑️ {to_small_caps('Reset All')}", f"userset {user_id} intro_reset", "footer", style="danger")
         
-        buttons.ibutton("Back", f"userset {user_id} leech", "footer")
-        buttons.ibutton("Close", f"userset {user_id} close", "footer")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} leech", "footer", style="primary")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         
         await editMessage(query.message, msg, buttons.build_menu(2))
     
@@ -1650,9 +1651,9 @@ async def edit_user_settings(client, query):
         msg = "<b>Select Text Color:</b>"
         
         for color_key, color_name in COLOR_OPTIONS.items():
-            buttons.ibutton(color_name, f"userset {user_id} intro_setcolor^{color_key}")
+            buttons.ibutton(f"🎨 {to_small_caps(color_name)}", f"userset {user_id} intro_setcolor^{color_key}")
         
-        buttons.ibutton("Back", f"userset {user_id} intro_subtitle", "footer")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} intro_subtitle", "footer")
         await editMessage(query.message, msg, buttons.build_menu(2))
     
     elif data[2].startswith("intro_setcolor"):
@@ -1684,9 +1685,9 @@ async def edit_user_settings(client, query):
         msg = "<b>Select Background Color:</b>"
         
         for color_key, color_name in BG_COLOR_OPTIONS.items():
-            buttons.ibutton(color_name, f"userset {user_id} intro_setbgcolor^{color_key}")
+            buttons.ibutton(f"🖼️ {to_small_caps(color_name)}", f"userset {user_id} intro_setbgcolor^{color_key}")
         
-        buttons.ibutton("Back", f"userset {user_id} intro_subtitle", "footer")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} intro_subtitle", "footer")
         await editMessage(query.message, msg, buttons.build_menu(2))
     
     elif data[2].startswith("intro_setbgcolor"):
@@ -1886,9 +1887,9 @@ async def edit_user_settings(client, query):
         handler_dict[user_id] = False
         await query.answer()
         buttons = ButtonMaker()
-        buttons.ibutton("Yes", f"userset {user_id} reset_now y")
-        buttons.ibutton("No", f"userset {user_id} reset_now n")
-        buttons.ibutton("Close", f"userset {user_id} close", "footer")
+        buttons.ibutton(f"✅ {to_small_caps('Yes')}", f"userset {user_id} reset_now y", style="success")
+        buttons.ibutton(f"❌ {to_small_caps('No')}", f"userset {user_id} reset_now n", style="danger")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         await editMessage(
             message, "Do you want to Reset Settings ?", buttons.build_menu(2)
         )
@@ -1975,7 +1976,7 @@ async def send_users_settings(client, message):
     if not userid:
         msg = f"<u><b>Total Users / Chats Data Saved :</b> {len(user_data)}</u>"
         buttons = ButtonMaker()
-        buttons.ibutton("Close", f"userset {message.from_user.id} close")
+        buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {message.from_user.id} close")
         button = buttons.build_menu(1)
         for user, data in user_data.items():
             msg += f"\n\n<code>{user}</code>:"
@@ -1997,9 +1998,9 @@ async def send_users_settings(client, message):
         if data := user_data[int(userid)]:
             buttons = ButtonMaker()
             buttons.ibutton(
-                "Delete Data", f"userset {message.from_user.id} user_del {userid}"
+                f"🗑️ {to_small_caps('Delete Data')}", f"userset {message.from_user.id} user_del {userid}"
             )
-            buttons.ibutton("Close", f"userset {message.from_user.id} close")
+            buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {message.from_user.id} close")
             button = buttons.build_menu(1)
             for key, value in data.items():
                 if key in ["token", "time", "ddl_servers", "usess", "personal_bot_token"]:

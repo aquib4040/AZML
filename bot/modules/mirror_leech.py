@@ -187,8 +187,6 @@ async def _mirror_leech(
     select = args["-s"] or args["-select"]
     isBulk = args["-b"] or args["-bulk"]
     name = args["-n"] or args["-name"]
-    if name:
-        name = name.replace("/", "-").replace("\\", "-").replace(":", "-").strip(" .-_")
     extract = (
         args["-e"]
         or args["-extract"]

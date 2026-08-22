@@ -188,7 +188,7 @@ class TelegramDownloadHelper:
 
         media = getattr(message, message.media.value) if message.media else None
 
-        if media is not None:
+        if media is not None and hasattr(media, "file_unique_id"):
             async with global_lock:
                 download = media.file_unique_id not in GLOBAL_GID
 
@@ -197,10 +197,7 @@ class TelegramDownloadHelper:
                     name = media.file_name if hasattr(media, "file_name") else "None"
                 else:
                     name = filename
-                name = name.replace("/", "-").replace("\\", "-").replace(":", "-").strip(" .-_")
-                if not name:
-                    name = "None"
-                path = path + name
+                    path = path + name
                 size = media.file_size
                 gid = media.file_unique_id
 

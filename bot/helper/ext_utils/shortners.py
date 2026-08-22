@@ -16,12 +16,55 @@ def short_url(longurl, attempt=0):
         return longurl
     i = 0 if len(shorteners_list) == 1 else randrange(len(shorteners_list))
     _shorten_dict = shorteners_list[i]
-    _shortener = _shorten_dict["domain"]
-    _shortener_api = _shorten_dict["api_key"]
+    _shortener = _shorten_dict.get("domain", "")
+    _shortener_api = _shorten_dict.get("api_key", "")
     cget = create_scraper().request
     disable_warnings()
     try:
-        if "shorte.st" in _shortener:
+        if "%s" in _shortener:
+            if _shortener.count("%s") >= 2:
+                req_url = _shortener % (_shortener_api, quote(longurl))
+            else:
+                req_url = _shortener % quote(longurl)
+            res = cget("GET", req_url)
+            try:
+                data = res.json()
+                shorted = (
+                    data.get("shortenedUrl")
+                    or data.get("shorturl")
+                    or data.get("url")
+                    or data.get("short")
+                    or data.get("link")
+                )
+                if shorted:
+                    return shorted
+            except Exception:
+                pass
+            text = res.text.strip()
+            if text.startswith("http://") or text.startswith("https://"):
+                return text
+            return longurl
+        elif "{api}" in _shortener or "{url}" in _shortener:
+            req_url = _shortener.replace("{api}", _shortener_api).replace("{url}", quote(longurl))
+            res = cget("GET", req_url)
+            try:
+                data = res.json()
+                shorted = (
+                    data.get("shortenedUrl")
+                    or data.get("shorturl")
+                    or data.get("url")
+                    or data.get("short")
+                    or data.get("link")
+                )
+                if shorted:
+                    return shorted
+            except Exception:
+                pass
+            text = res.text.strip()
+            if text.startswith("http://") or text.startswith("https://"):
+                return text
+            return longurl
+        elif "shorte.st" in _shortener:
             headers = {"public-api-token": _shortener_api}
             data = {"urlToShorten": quote(longurl)}
             return cget(
@@ -54,26 +97,30 @@ def short_url(longurl, attempt=0):
                 f"http://cutt.ly/api/api.php?key={_shortener_api}&short={longurl}",
             ).json()["url"]["shortLink"]
         else:
+            domain = _shortener.replace("http://", "").replace("https://", "").rstrip("/")
             res = cget(
                 "GET",
-                f"https://{_shortener}/api?api={_shortener_api}&url={quote(longurl)}",
-            ).json()
-            shorted = res["shortenedUrl"]
-            if not shorted:
-                shrtco_res = cget(
-                    "GET", f"https://api.shrtco.de/v2/shorten?url={quote(longurl)}"
-                ).json()
-                shrtco_link = shrtco_res["result"]["full_short_link"]
-                res = cget(
-                    "GET",
-                    f"https://{_shortener}/api?api={_shortener_api}&url={shrtco_link}",
-                ).json()
-                shorted = res["shortenedUrl"]
-            if not shorted:
-                shorted = longurl
-            return shorted
+                f"https://{domain}/api?api={_shortener_api}&url={quote(longurl)}",
+            )
+            try:
+                data = res.json()
+                shorted = (
+                    data.get("shortenedUrl")
+                    or data.get("shorturl")
+                    or data.get("url")
+                    or data.get("short")
+                    or data.get("link")
+                )
+                if shorted:
+                    return shorted
+            except Exception:
+                pass
+            text = res.text.strip()
+            if text.startswith("http://") or text.startswith("https://"):
+                return text
+            return longurl
     except Exception as e:
-        LOGGER.error(e)
+        LOGGER.error(f"Shortener error on {_shortener}: {e}")
         sleep(1)
         attempt += 1
         return short_url(longurl, attempt)

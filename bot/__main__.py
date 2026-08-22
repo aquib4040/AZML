@@ -147,7 +147,14 @@ async def token_callback(_, query):
         return await query.answer("Already Used, Generate New One", show_alert=True)
     update_user_ldata(user_id, "token", str(uuid4()))
     update_user_ldata(user_id, "time", time())
-    await query.answer("Activated Temporary Token!", show_alert=True)
+    if DATABASE_URL:
+        await DbManger().update_user_data(user_id)
+    validity_str = (
+        get_readable_time(int(config_dict["TOKEN_TIMEOUT"]))
+        if config_dict["TOKEN_TIMEOUT"]
+        else "24 Hours"
+    )
+    await query.answer(f"✅ Access Token Activated! You have access for {validity_str}.", show_alert=True)
     kb = query.message.reply_markup.inline_keyboard[1:]
     kb.insert(
         0, [InlineKeyboardButton(BotTheme("ACTIVATED"), callback_data="pass activated")]

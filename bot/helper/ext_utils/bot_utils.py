@@ -63,7 +63,7 @@ from bot import (
     user,
 )
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.telegram_helper.button_build import ButtonMaker
+from bot.helper.telegram_helper.button_build import ButtonMaker, to_small_caps
 from bot.helper.ext_utils.telegraph_helper import telegraph
 from bot.helper.ext_utils.shortners import short_url
 
@@ -846,12 +846,16 @@ async def checking_access(user_id, button=None):
         if button is None:
             button = ButtonMaker()
         encrypt_url = b64encode(f"{token}&&{user_id}".encode()).decode()
+        validity_text = get_readable_time(config_dict["TOKEN_TIMEOUT"])
         button.ubutton(
-            "Generate New Token",
+            f"🔗 {to_small_caps(f'Get {validity_text} Access Token')}",
             short_url(f"https://t.me/{bot_name}?start={encrypt_url}"),
         )
         return (
-            f'<i>Temporary Token has been expired,</i> Kindly generate a New Temp Token to start using bot Again.\n<b>Validity :</b> <code>{get_readable_time(config_dict["TOKEN_TIMEOUT"])}</code>',
+            f"🔒 <b><u>Access Token Required :</u></b>\n\n"
+            f"<i>Your temporary access token has expired or not verified.</i>\n"
+            f"Kindly click the button below, pass through the shortener, and activate your token.\n\n"
+            f"➲ <b>Token Validity :</b> <code>{validity_text}</code>",
             button,
         )
     return None, button

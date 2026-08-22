@@ -54,6 +54,8 @@ LOGGER = getLogger(__name__)
 
 if ospath.exists("config.env"):
     load_dotenv("config.env", override=False)
+elif ospath.exists(".env"):
+    load_dotenv(".env", override=False)
 
 Interval = []
 QbInterval = []
@@ -103,7 +105,12 @@ if len(DATABASE_URL) == 0:
 if DATABASE_URL:
     conn = MongoClient(DATABASE_URL)
     db = conn.canonleech
-    current_config = dict(dotenv_values("config.env"))
+    if ospath.exists("config.env"):
+        current_config = dict(dotenv_values("config.env"))
+    elif ospath.exists(".env"):
+        current_config = dict(dotenv_values(".env"))
+    else:
+        current_config = {}
     old_config = db.settings.deployConfig.find_one({"_id": bot_id})
     if old_config is None:
         db.settings.deployConfig.replace_one(
@@ -118,6 +125,8 @@ if DATABASE_URL:
     elif config_dict := db.settings.config.find_one({"_id": bot_id}):
         del config_dict["_id"]
         for key, value in config_dict.items():
+            if key in ["BOT_TOKEN", "OWNER_ID", "TELEGRAM_API", "TELEGRAM_HASH", "DATABASE_URL"] and environ.get(key):
+                continue
             environ[key] = str(value)
     if pf_dict := db.settings.files.find_one({"_id": bot_id}):
         del pf_dict["_id"]
@@ -255,7 +264,8 @@ if len(USER_SESSION_STRING) != 0:
             session_string=USER_SESSION_STRING,
             parse_mode=enums.ParseMode.HTML,
             no_updates=True,
-        ).start()
+        )
+        user.loop.run_until_complete(user.start())
         IS_PREMIUM_USER = user.me.is_premium
     except Exception as e:
         log_error(f"Failed making client from USER_SESSION_STRING : {e}")
@@ -912,8 +922,10 @@ bot = wztgClient(
     bot_token=BOT_TOKEN,
     workers=1000,
     parse_mode=enums.ParseMode.HTML,
-).start()
+    in_memory=True,
+)
 bot_loop = bot.loop
+bot_loop.run_until_complete(bot.start())
 bot_name = bot.me.username
 scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
 

@@ -29,6 +29,8 @@ basicConfig(
 
 if ospath.exists("config.env"):
     load_dotenv("config.env", override=False)
+elif ospath.exists(".env"):
+    load_dotenv(".env", override=False)
 
 try:
     if bool(environ.get("_____REMOVE_THIS_LINE_____")):
@@ -55,13 +57,19 @@ if DATABASE_URL is not None:
     config_dict = db.settings.config.find_one({"_id": bot_id})
     if old_config is not None:
         del old_config["_id"]
+    if ospath.exists("config.env"):
+        current_config = dict(dotenv_values("config.env"))
+    elif ospath.exists(".env"):
+        current_config = dict(dotenv_values(".env"))
+    else:
+        current_config = {}
     if (
         old_config is not None
-        and old_config == dict(dotenv_values("config.env"))
+        and old_config == current_config
         or old_config is None
     ) and config_dict is not None:
-        environ["UPSTREAM_REPO"] = config_dict["UPSTREAM_REPO"]
-        environ["UPSTREAM_BRANCH"] = config_dict["UPSTREAM_BRANCH"]
+        environ["UPSTREAM_REPO"] = config_dict.get("UPSTREAM_REPO", "")
+        environ["UPSTREAM_BRANCH"] = config_dict.get("UPSTREAM_BRANCH", "master")
         environ["UPGRADE_PACKAGES"] = config_dict.get("UPDATE_PACKAGES", "False")
     conn.close()
 

@@ -4,7 +4,6 @@ aioshutil
 anytree==2.8.0
 apscheduler
 aria2p
-asyncio
 beautifulsoup4
 imdbinfo
 cloudscraper
@@ -32,7 +31,7 @@ psutil
 pybase64
 pycountry
 pymongo
-pyrotgfork
+wzgram[fast]
 python-dotenv
 python-magic
 qbittorrent-api
@@ -40,10 +39,10 @@ requests
 speedtest-cli
 telegraph
 tenacity
-tgcrypto
 uv
 uvloop==0.21.0
 xattr
 yt-dlp[default,curl-cffi]
 yt-dlp-ejs
 pytz
+tzlocal

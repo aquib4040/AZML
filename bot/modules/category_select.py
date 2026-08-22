@@ -139,11 +139,12 @@ async def confirm_category(client, query):
                 f'{"✅️" if cat_name == _name else ""} {_name}',
                 f"scat {user_id} {msg_id} {_name.replace(' ', '_')}",
             )
-    buttons.ibutton("Cancel", f"scat {user_id} {msg_id} scancel", "footer")
+    buttons.ibutton("✖️ Cancel", f"scat {user_id} {msg_id} scancel", "footer", style="danger")
     buttons.ibutton(
-        f"Done ({get_readable_time(60 - (time() - bot_cache[msg_id][4]))})",
+        f"✅ Done ({get_readable_time(60 - (time() - bot_cache[msg_id][4]))})",
         f"scat {user_id} {msg_id} sdone",
         "footer",
+        style="success",
     )
     await editMessage(
         query.message,
@@ -179,12 +180,13 @@ async def confirm_dump(client, query):
                 f'{"✅️" if upall or cat_name == _name else ""} {_name}',
                 f"dcat {user_id} {msg_id} {_name.replace(' ', '_')}",
             )
-    buttons.ibutton("Upload in All", f"dcat {user_id} {msg_id} All", "header")
-    buttons.ibutton("Cancel", f"dcat {user_id} {msg_id} dcancel", "footer")
+    buttons.ibutton("🚀 Upload in All", f"dcat {user_id} {msg_id} All", "header", style="primary")
+    buttons.ibutton("✖️ Cancel", f"dcat {user_id} {msg_id} dcancel", "footer", style="danger")
     buttons.ibutton(
-        f"Done ({get_readable_time(60 - (time() - bot_cache[msg_id][3]))})",
+        f"✅ Done ({get_readable_time(60 - (time() - bot_cache[msg_id][3]))})",
         f"dcat {user_id} {msg_id} ddone",
         "footer",
+        style="success",
     )
     await editMessage(
         query.message,

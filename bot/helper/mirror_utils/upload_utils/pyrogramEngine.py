@@ -168,20 +168,22 @@ class TgUploader:
                 buttons.ubutton(
                     BotTheme("SCREENSHOTS"),
                     await get_ss(up_path, self.__leech_utils["screenshots"]),
+                    style="primary",
                 )
         except Exception as e:
             LOGGER.error(f"ScreenShots Error: {e}")
         try:
             if self.__mediainfo:
                 buttons.ubutton(
-                    BotTheme("MEDIAINFO_LINK"), await get_mediainfo_link(up_path)
+                    BotTheme("MEDIAINFO_LINK"), await get_mediainfo_link(up_path),
+                    style="primary",
                 )
         except Exception as e:
             LOGGER.error(f"MediaInfo Error: {e}")
         if config_dict["SAVE_MSG"] and (
             config_dict["LEECH_LOG_ID"] or not self.__listener.isPrivate
         ):
-            buttons.ibutton(BotTheme("SAVE_MSG"), "save", "footer")
+            buttons.ibutton(BotTheme("SAVE_MSG"), "save", "footer", style="success")
         if self.__has_buttons:
             return buttons.build_menu(1)
         return None

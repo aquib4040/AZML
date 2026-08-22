@@ -146,10 +146,10 @@ def bt_selection_buttons(id_):
     pincode = "".join([n for n in id_ if n.isdigit()][:4])
     buttons = ButtonMaker()
     BASE_URL = config_dict["BASE_URL"]
-    buttons.ubutton("Select Files", f"{BASE_URL}/app/files/{id_}")
-    buttons.ibutton("Pincode", f"btsel pin {gid} {pincode}")
-    buttons.ibutton("Cancel", f"btsel rm {gid} {id_}")
-    buttons.ibutton("Done Selecting", f"btsel done {gid} {id_}")
+    buttons.ubutton(f"📁 {to_small_caps('Select Files')}", f"{BASE_URL}/app/files/{id_}", style="primary")
+    buttons.ibutton(f"🔢 {to_small_caps('Pincode')}", f"btsel pin {gid} {pincode}", style="primary")
+    buttons.ibutton(f"❌ {to_small_caps('Cancel')}", f"btsel rm {gid} {id_}", style="danger")
+    buttons.ibutton(f"✅ {to_small_caps('Done Selecting')}", f"btsel done {gid} {id_}", style="success")
     return buttons.build_menu(2)
 
 
@@ -364,7 +364,7 @@ def get_readable_message():
 
     msg += BotTheme("FOOTER")
     buttons = ButtonMaker()
-    buttons.ibutton(BotTheme("REFRESH", Page=f"{PAGE_NO}/{PAGES}"), "status ref")
+    buttons.ibutton(BotTheme("REFRESH", Page=f"{PAGE_NO}/{PAGES}"), "status ref", style="success")
     if tasks > STATUS_LIMIT:
         if config_dict["BOT_MAX_TASKS"]:
             msg += BotTheme(
@@ -376,9 +376,9 @@ def get_readable_message():
         else:
             msg += BotTheme("TASKS", Tasks=tasks)
         buttons = ButtonMaker()
-        buttons.ibutton(BotTheme("PREVIOUS"), "status pre")
-        buttons.ibutton(BotTheme("REFRESH", Page=f"{PAGE_NO}/{PAGES}"), "status ref")
-        buttons.ibutton(BotTheme("NEXT"), "status nex")
+        buttons.ibutton(BotTheme("PREVIOUS"), "status pre", style="primary")
+        buttons.ibutton(BotTheme("REFRESH", Page=f"{PAGE_NO}/{PAGES}"), "status ref", style="success")
+        buttons.ibutton(BotTheme("NEXT"), "status nex", style="primary")
     button = buttons.build_menu(3)
     msg += BotTheme("Cpu", cpu=cpu_percent())
     msg += BotTheme(

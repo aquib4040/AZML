@@ -289,7 +289,7 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             SAVE_MODE=save_mode,
             USESS=u_sess,
         )
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back", "footer", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back", "footer")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         button = buttons.build_menu(2)
     elif key == "mirror":
@@ -364,7 +364,7 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             USERTD=user_tds,
         )
 
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back", "footer", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back", "footer")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         button = buttons.build_menu(2)
     elif key == "leech":
@@ -568,7 +568,7 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             AUTO_THUMB="Enabled" if auto_thumb else "Disabled",
         )
 
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back", "footer", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back", "footer")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         button = buttons.build_menu(2)
     elif key == "personal_bot":
@@ -608,7 +608,7 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
         if pbot_token and pdump_chat:
             buttons.ibutton(f"🛡️ {to_small_caps('Verify Permissions')}", f"userset {user_id} verify_pbot", style="primary")
 
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back", "footer", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back", "footer")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         button = buttons.build_menu(2)
     elif key == "ddl_servers":
@@ -628,7 +628,7 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
                 f"{'✅' if btn in serv_list else '🌐'} {to_small_caps(fname_dict[btn])}",
                 f"userset {user_id} {btn}",
             )
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back mirror", "footer", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back mirror", "footer")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         button = buttons.build_menu(2)
     elif edit_type:
@@ -817,7 +817,7 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             elif key == "user_tds":
                 buttons.ibutton(f"📂 {to_small_caps('Show UserTDs')}", f"userset {user_id} show_tds", "header", style="primary")
             buttons.ibutton(f"🗑️ {to_small_caps('Delete')}", f"userset {user_id} d{key}", style="danger")
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back {edit_type}", "footer", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} back {edit_type}", "footer")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         button = buttons.build_menu(2)
     
@@ -1626,7 +1626,7 @@ async def edit_user_settings(client, query):
         if text != "Not Set":
             buttons.ibutton(f"🗑️ {to_small_caps('Reset All')}", f"userset {user_id} intro_reset", "footer", style="danger")
         
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} leech", "footer", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", f"userset {user_id} leech", "footer")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", f"userset {user_id} close", "footer", style="danger")
         
         await editMessage(query.message, msg, buttons.build_menu(2))

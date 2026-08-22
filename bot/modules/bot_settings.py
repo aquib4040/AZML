@@ -864,7 +864,7 @@ async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
         if shorteners_list:
             buttons.ibutton(f"🗑️ {to_small_caps('Remove Shortener')}", "botset rmshrt", style="danger")
             buttons.ibutton(f"🧹 {to_small_caps('Clear All')}", "botset clearshrt", style="danger")
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back", "footer", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back", "footer")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", "footer", style="danger")
     elif key == "shrtval":
         token_timeout = config_dict.get("TOKEN_TIMEOUT", "")
@@ -881,14 +881,14 @@ async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
         buttons.ibutton(f"⏱️ {to_small_caps('6 Hours')}", "botset setval 21600", style="primary")
         buttons.ibutton(f"⏱️ {to_small_caps('1 Hour')}", "botset setval 3600", style="primary")
         buttons.ibutton(f"✏️ {to_small_caps('Custom Duration')}", "botset customval", style="success")
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset shortener", "footer", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset shortener", "footer")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", "footer", style="danger")
     elif key == "rmshrt":
         msg = "⌬ <b><u>ʀᴇᴍᴏᴠᴇ sʜᴏʀᴛᴇɴᴇʀ :</u></b>\n\n<i>Click on a shortener to remove it:</i>"
         for idx, sh in enumerate(shorteners_list):
             domain = sh.get("domain", "")[:25]
             buttons.ibutton(f"🗑️ {to_small_caps(domain)}", f"botset delshrt {idx}", style="danger")
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset shortener", "footer", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset shortener", "footer")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", "footer", style="danger")
     elif key == "addshrt_prompt":
         msg = (
@@ -899,7 +899,7 @@ async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
             "<i>Send your shortener domain and API key now:</i>\n"
             "<b>Timeout:</b> 60 sec"
         )
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset shortener", "footer", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset shortener", "footer")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", "footer", style="danger")
     elif key == "customval_prompt":
         msg = (
@@ -912,14 +912,14 @@ async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
             "<i>Send your custom validity duration now:</i>\n"
             "<b>Timeout:</b> 60 sec"
         )
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset shrtval", "footer", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset shrtval", "footer")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", "footer", style="danger")
     elif key == "var":
         for k in list(OrderedDict(sorted(config_dict.items())).keys())[
             START : 10 + START
         ]:
             buttons.ibutton(f"🔹 {to_small_caps(k)}", f"botset editvar {k}", style="primary")
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", style="danger")
         for x in range(0, len(config_dict) - 1, 10):
             buttons.ibutton(
@@ -927,7 +927,7 @@ async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
             )
         msg = f"⌬ <b><u>ᴄᴏɴғɪɢ ᴠᴀʀɪᴀʙʟᴇs</u></b> | <b>Page: {int(START/10)+1}</b>"
     elif key == "private":
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", style="danger")
         msg = """⌬ <b><u>ᴘʀɪᴠᴀᴛᴇ ғɪʟᴇs :</u></b>
 
@@ -946,7 +946,7 @@ async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
         else:
             buttons.ibutton(f"👁️ {to_small_caps('View')}", "botset view aria", style="primary")
         buttons.ibutton(f"➕ {to_small_caps('Add New key')}", "botset editaria newkey", style="success")
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", style="danger")
         for x in range(0, len(aria2_options) - 1, 10):
             buttons.ibutton(
@@ -960,7 +960,7 @@ async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
             buttons.ibutton(f"✏️ {to_small_caps('Edit')}", "botset edit qbit", style="success")
         else:
             buttons.ibutton(f"👁️ {to_small_caps('View')}", "botset view qbit", style="primary")
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", style="danger")
         for x in range(0, len(qbit_options) - 1, 10):
             buttons.ibutton(
@@ -978,7 +978,7 @@ async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
             buttons.ibutton(
                 f"👁️ {to_small_caps('View Var Value')}", f"botset showvar {key}", position="header", style="primary"
             )
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back var", position="footer", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back var", position="footer")
         if key not in bool_vars:
             if not edit_mode:
                 buttons.ibutton(f"✏️ {to_small_caps('Edit Value')}", f"botset editvar {key} edit", style="success")
@@ -1010,7 +1010,7 @@ async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
             buttons.ibutton(f"🟢 {to_small_caps('True')}", f"botset boolvar {key} on", style="success")
             buttons.ibutton(f"🔴 {to_small_caps('False')}", f"botset boolvar {key} off", style="danger")
     elif edit_type == "editaria":
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back aria", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back aria")
         if key != "newkey":
             buttons.ibutton(f"⚙️ {to_small_caps('Default')}", f"botset resetaria {key}", style="primary")
             buttons.ibutton(f"📝 {to_small_caps('Empty String')}", f"botset emptyaria {key}", style="danger")
@@ -1020,7 +1020,7 @@ async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
         else:
             msg = f"Send a valid value for {key}. Timeout: 60 sec"
     elif edit_type == "editqbit":
-        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back qbit", style="primary")
+        buttons.ibutton(f"🔙 {to_small_caps('Back')}", "botset back qbit")
         buttons.ibutton(f"📝 {to_small_caps('Empty String')}", f"botset emptyqbit {key}", style="danger")
         buttons.ibutton(f"✖️ {to_small_caps('Close')}", "botset close", style="danger")
         msg = f"Send a valid value for {key}. Timeout: 60 sec"

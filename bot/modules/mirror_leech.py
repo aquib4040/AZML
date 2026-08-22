@@ -98,11 +98,11 @@ async def open_stream_btns(message):
 
     btn = ButtonMaker()
     sel_csv = ""
-    btn.ibutton("🎥 Video (No Audio)", f"wzmlx {user_id} streamsel toggle_video {sel_csv}")
-    btn.ibutton("🔊 Audio Only",       f"wzmlx {user_id} streamsel toggle_audio {sel_csv}")
-    btn.ibutton("📝 Subtitles",        f"wzmlx {user_id} streamsel toggle_subtitle {sel_csv}")
-    btn.ibutton("✔️ Done",             f"wzmlx {user_id} streamsel done {sel_csv}")
-    btn.ibutton("❌ Cancel",           f"wzmlx {user_id} streamsel cancel")
+    btn.ibutton("🎥 Video (No Audio)", f"wzmlx {user_id} streamsel toggle_video {sel_csv}", style="primary")
+    btn.ibutton("🔊 Audio Only",       f"wzmlx {user_id} streamsel toggle_audio {sel_csv}", style="primary")
+    btn.ibutton("📝 Subtitles",        f"wzmlx {user_id} streamsel toggle_subtitle {sel_csv}", style="primary")
+    btn.ibutton("✔️ Done",             f"wzmlx {user_id} streamsel done {sel_csv}", style="success")
+    btn.ibutton("❌ Cancel",           f"wzmlx {user_id} streamsel cancel", style="danger")
 
     sel_msg = await sendMessage(
         message,
@@ -630,7 +630,7 @@ async def wzmlxcb(_, query):
             startLine = f"<b>Showing Last {ind} Lines from log.txt:</b> \n\n----------<b>START LOG</b>----------\n\n"
             endLine = "\n----------<b>END LOG</b>----------"
             btn = ButtonMaker()
-            btn.ibutton("Cʟᴏsᴇ", f"wzmlx {user_id} close")
+            btn.ibutton("✖️ Cʟᴏsᴇ", f"wzmlx {user_id} close", style="danger")
             await sendMessage(
                 message, startLine + escape(Loglines) + endLine, btn.build_menu(1)
             )
@@ -664,7 +664,7 @@ async def wzmlxcb(_, query):
     elif data[2] == "help":
         await query.answer()
         btn = ButtonMaker()
-        btn.ibutton("Cʟᴏsᴇ", f"wzmlx {user_id} close")
+        btn.ibutton("✖️ Cʟᴏsᴇ", f"wzmlx {user_id} close", style="danger")
         if data[3] == "CLONE":
             await editMessage(message, CLONE_HELP_MESSAGE[1], btn.build_menu(1))
         elif data[3] == "MIRROR":
@@ -681,46 +681,46 @@ async def wzmlxcb(_, query):
         btn = ButtonMaker()
         if data[3] == "mirror_help":
             btn.ibutton("Bᴀᴄᴋ", f"wzmlx {user_id} guide home")
-            btn.ibutton("Cʟᴏsᴇ", f"wzmlx {user_id} close")
+            btn.ibutton("✖️ Cʟᴏsᴇ", f"wzmlx {user_id} close", style="danger")
             await editMessage(message, MIRROR_HELP_PAGE, btn.build_menu(2))
         elif data[3] == "leech_help":
             btn.ibutton("Leech Settings Info", f"wzmlx {user_id} guide leech_info")
             btn.ibutton("AutoRename Guide", f"wzmlx {user_id} guide leech_auto")
             btn.ibutton("Regex Guide", f"wzmlx {user_id} guide leech_regex")
             btn.ibutton("Bᴀᴄᴋ", f"wzmlx {user_id} guide home")
-            btn.ibutton("Cʟᴏsᴇ", f"wzmlx {user_id} close")
+            btn.ibutton("✖️ Cʟᴏsᴇ", f"wzmlx {user_id} close", style="danger")
             await editMessage(message, LEECH_HELP_PAGE, btn.build_menu(2))
         elif data[3] == "leech_info":
             btn.ibutton("AutoRename Guide", f"wzmlx {user_id} guide leech_auto")
             btn.ibutton("Regex Guide", f"wzmlx {user_id} guide leech_regex")
             btn.ibutton("Bᴀᴄᴋ", f"wzmlx {user_id} guide leech_help")
-            btn.ibutton("Cʟᴏsᴇ", f"wzmlx {user_id} close")
+            btn.ibutton("✖️ Cʟᴏsᴇ", f"wzmlx {user_id} close", style="danger")
             await editMessage(message, LEECH_INFO_HELP, btn.build_menu(2))
         elif data[3] == "leech_auto":
             btn.ibutton("Leech Settings Info", f"wzmlx {user_id} guide leech_info")
             btn.ibutton("Regex Guide", f"wzmlx {user_id} guide leech_regex")
             btn.ibutton("Bᴀᴄᴋ", f"wzmlx {user_id} guide leech_help")
-            btn.ibutton("Cʟᴏsᴇ", f"wzmlx {user_id} close")
+            btn.ibutton("✖️ Cʟᴏsᴇ", f"wzmlx {user_id} close", style="danger")
             await editMessage(message, LEECH_AUTORENAME_HELP, btn.build_menu(2))
         elif data[3] == "leech_regex":
             btn.ibutton("Leech Settings Info", f"wzmlx {user_id} guide leech_info")
             btn.ibutton("AutoRename Guide", f"wzmlx {user_id} guide leech_auto")
             btn.ibutton("Bᴀᴄᴋ", f"wzmlx {user_id} guide leech_help")
-            btn.ibutton("Cʟᴏsᴇ", f"wzmlx {user_id} close")
+            btn.ibutton("✖️ Cʟᴏsᴇ", f"wzmlx {user_id} close", style="danger")
             await editMessage(message, LEECH_REGEX_HELP, btn.build_menu(2))
         elif data[3] == "user_help":
             btn.ibutton("Bᴀᴄᴋ", f"wzmlx {user_id} guide home")
-            btn.ibutton("Cʟᴏsᴇ", f"wzmlx {user_id} close")
+            btn.ibutton("✖️ Cʟᴏsᴇ", f"wzmlx {user_id} close", style="danger")
             await editMessage(message, USER_HELP_PAGE, btn.build_menu(2))
         elif data[3] == "search_help":
             btn.ibutton("Bᴀᴄᴋ", f"wzmlx {user_id} guide home")
-            btn.ibutton("Cʟᴏsᴇ", f"wzmlx {user_id} close")
+            btn.ibutton("✖️ Cʟᴏsᴇ", f"wzmlx {user_id} close", style="danger")
             await editMessage(message, SEARCH_HELP_PAGE, btn.build_menu(2))
         elif data[3] == "admin_help":
             if not await CustomFilters.sudo("", query):
                 return await query.answer("Not Sudo or Owner!", show_alert=True)
             btn.ibutton("Bᴀᴄᴋ", f"wzmlx {user_id} guide home")
-            btn.ibutton("Cʟᴏsᴇ", f"wzmlx {user_id} close")
+            btn.ibutton("✖️ Cʟᴏsᴇ", f"wzmlx {user_id} close", style="danger")
             await editMessage(message, ADMIN_HELP_PAGE, btn.build_menu(2))
         else:
             buttons = ButtonMaker()
@@ -772,11 +772,11 @@ async def wzmlxcb(_, query):
         sel_csv = ",".join(sorted(selected)) if selected else ""
         def _lbl(key, display):
             return f"{'✅ ' if key in selected else ''}{display}"
-        btn.ibutton(_lbl("video",    "🎥 Video (No Audio)"), f"wzmlx {user_id} streamsel toggle_video {sel_csv}")
-        btn.ibutton(_lbl("audio",    "🔊 Audio Only"),       f"wzmlx {user_id} streamsel toggle_audio {sel_csv}")
-        btn.ibutton(_lbl("subtitle", "📝 Subtitles"),        f"wzmlx {user_id} streamsel toggle_subtitle {sel_csv}")
-        btn.ibutton("✔️ Done",   f"wzmlx {user_id} streamsel done {sel_csv}")
-        btn.ibutton("❌ Cancel", f"wzmlx {user_id} streamsel cancel")
+        btn.ibutton(_lbl("video",    "🎥 Video (No Audio)"), f"wzmlx {user_id} streamsel toggle_video {sel_csv}", style="primary")
+        btn.ibutton(_lbl("audio",    "🔊 Audio Only"),       f"wzmlx {user_id} streamsel toggle_audio {sel_csv}", style="primary")
+        btn.ibutton(_lbl("subtitle", "📝 Subtitles"),        f"wzmlx {user_id} streamsel toggle_subtitle {sel_csv}", style="primary")
+        btn.ibutton("✔️ Done",   f"wzmlx {user_id} streamsel done {sel_csv}", style="success")
+        btn.ibutton("❌ Cancel", f"wzmlx {user_id} streamsel cancel", style="danger")
         await editReplyMarkup(message, btn.build_menu(1))
     else:
         await query.answer()

@@ -824,11 +824,11 @@ class MirrorLeechListener:
             if link or rclonePath and config_dict["RCLONE_SERVE_URL"] and not private:
                 if is_DDL := isinstance(link, dict):
                     for dlup, dlink in link.items():
-                        buttons.ubutton(BotTheme("DDL_LINK", Serv=dlup), dlink)
+                        buttons.ubutton(BotTheme("DDL_LINK", Serv=dlup), dlink, style="primary")
                 elif link and (
                     user_id == OWNER_ID or not config_dict["DISABLE_DRIVE_LINK"]
                 ):
-                    buttons.ubutton(BotTheme("CLOUD_LINK"), link)
+                    buttons.ubutton(BotTheme("CLOUD_LINK"), link, style="primary")
                 else:
                     msg += BotTheme("RCPATH", RCpath=rclonePath)
                 if rclonePath and (RCLONE_SERVE_URL := config_dict["RCLONE_SERVE_URL"]):
@@ -837,7 +837,7 @@ class MirrorLeechListener:
                     share_url = f"{RCLONE_SERVE_URL}/{remote}/{url_path}"
                     if mime_type == "Folder":
                         share_url += "/"
-                    buttons.ubutton(BotTheme("RCLONE_LINK"), share_url)
+                    buttons.ubutton(BotTheme("RCLONE_LINK"), share_url, style="primary")
                 elif not rclonePath and not is_DDL:
                     INDEX_URL = (
                         self.index_link if self.drive_id else config_dict["INDEX_URL"]
@@ -847,12 +847,12 @@ class MirrorLeechListener:
                         share_url = f"{INDEX_URL}/{url_path}"
                         if mime_type == "Folder":
                             share_url += "/"
-                            buttons.ubutton(BotTheme("INDEX_LINK_F"), share_url)
+                            buttons.ubutton(BotTheme("INDEX_LINK_F"), share_url, style="primary")
                         else:
-                            buttons.ubutton(BotTheme("INDEX_LINK_D"), share_url)
+                            buttons.ubutton(BotTheme("INDEX_LINK_D"), share_url, style="primary")
                             if mime_type.startswith(("image", "video", "audio")):
                                 share_urls = f"{INDEX_URL}/{url_path}?a=view"
-                                buttons.ubutton(BotTheme("VIEW_LINK"), share_urls)
+                                buttons.ubutton(BotTheme("VIEW_LINK"), share_urls, style="primary")
 
             else:
                 msg += BotTheme("RCPATH", RCpath=rclonePath)
@@ -864,9 +864,9 @@ class MirrorLeechListener:
             if config_dict["MIRROR_LOG_ID"] and not self.excep_chat:
                 m_btns = deepcopy(buttons)
                 if self.source_url and config_dict["SOURCE_LINK"]:
-                    m_btns.ubutton(BotTheme("SOURCE_URL"), self.source_url)
+                    m_btns.ubutton(BotTheme("SOURCE_URL"), self.source_url, style="primary")
                 if config_dict["SAVE_MSG"]:
-                    m_btns.ibutton(BotTheme("SAVE_MSG"), "save", "footer")
+                    m_btns.ibutton(BotTheme("SAVE_MSG"), "save", "footer", style="success")
                 log_msg = list(
                     (
                         await sendMultiMessage(

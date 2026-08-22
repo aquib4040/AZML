@@ -2014,15 +2014,15 @@ async def send_users_settings(client, message):
         await sendMessage(message, f"{userid} have not saved anything..")
 
 
-# ============ /aux AUTORENAME COMMAND ============
+# ============ /arx AUTORENAME COMMAND ============
 @new_task
 async def autorename_cmd(client, message):
     """
-    /aux [template] — Set AutoRename template directly.
-    /aux            — Show current template.
-    /aux off        — Clear the saved template.
+    /arx [template] — Set AutoRename template directly.
+    /arx            — Show current template.
+    /arx off        — Clear the saved template.
 
-    Example: /aux [animeshrine.xyz] S0{season}E{episode} Dr. Stone {quality}.mkv
+    Example: /arx [animeshrine.xyz] S0{season}E{episode} Dr. Stone {quality}.mkv
     """
     user_id = message.from_user.id
     user_dict = user_data.get(user_id, {})
@@ -2039,14 +2039,14 @@ async def autorename_cmd(client, message):
                 message,
                 f"📝 <b>Current AutoRename Template:</b>\n"
                 f"<code>{escape(current)}</code>\n\n"
-                f"<b>Usage:</b> <code>/aux [template]</code>\n"
-                f"<b>Clear:</b> <code>/aux off</code>",
+                f"<b>Usage:</b> <code>/arx [template]</code>\n"
+                f"<b>Clear:</b> <code>/arx off</code>",
             )
         else:
             await sendMessage(
                 message,
                 "📝 <b>No AutoRename template set.</b>\n\n"
-                "<b>Usage:</b> <code>/aux [animeshrine.xyz] S0{{season}}E{{episode}} Dr. Stone {{quality}}.mkv</code>\n\n"
+                "<b>Usage:</b> <code>/arx [animeshrine.xyz] S0{{season}}E{{episode}} Dr. Stone {{quality}}.mkv</code>\n\n"
                 "<b>Available tags:</b>\n"
                 "  <code>{title}</code> — parsed title\n"
                 "  <code>{season}</code> — season number\n"

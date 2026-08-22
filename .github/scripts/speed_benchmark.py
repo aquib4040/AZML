@@ -13,6 +13,8 @@ logging.getLogger("pyrogram").setLevel(logging.ERROR)
 def azmlTgClient(*args, **kwargs):
     if "max_concurrent_transmissions" in signature(Client.__init__).parameters:
         kwargs["max_concurrent_transmissions"] = 1000
+    if "workers" in signature(Client.__init__).parameters:
+        kwargs["workers"] = 16
     return Client(*args, **kwargs)
 
 async def get_runner_location():

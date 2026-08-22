@@ -21,10 +21,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Benchmark Dependencies
+      - name: Install Dependencies from requirements.txt
         run: |
           python -m pip install --upgrade pip
-          pip install speedtest-cli aiohttp pyrogram tgcrypto
+          pip install -r requirements.txt
 
       - name: Run Speed Benchmark Pipeline
         env:

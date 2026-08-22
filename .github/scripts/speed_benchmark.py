@@ -39,38 +39,68 @@ async def run_telegram_speedtest(bot_token, api_id, api_hash):
         me = await app.get_me()
         print(f"  - Logged into Telegram Bot: @{me.username}")
 
-        # Create 20MB temporary test payload
-        test_file = "tg_benchmark_20mb.dat"
-        file_size_mb = 20
-        with open(test_file, "wb") as f:
-            f.write(os.urandom(file_size_mb * 1024 * 1024))
+        # Check if custom file size or custom Telegram message link/ID is provided
+        custom_link = os.environ.get("TEST_TELEGRAM_LINK", "")
+        file_size_mb = int(os.environ.get("BENCHMARK_FILE_SIZE_MB", "50"))
 
-        # Measure Telegram Upload Speed
-        print("  - Testing Telegram Upload Speed (20 MB)...")
-        start_up = time.time()
-        msg = await app.send_document("me", test_file, caption="Telegram Speedtest Payload")
-        up_duration = time.time() - start_up
-        tg_up_mbps = (file_size_mb * 8) / up_duration if up_duration > 0 else 0
-        tg_up_mbs = file_size_mb / up_duration if up_duration > 0 else 0
-        print(f"  - Telegram Upload Speed: {tg_up_mbps:.2f} Mbps ({tg_up_mbs:.2f} MB/s)")
+        tg_down_mbps, tg_up_mbps = 0, 0
 
-        # Measure Telegram Download Speed
-        print("  - Testing Telegram Download Speed (20 MB)...")
-        start_down = time.time()
-        down_path = await app.download_media(msg)
-        down_duration = time.time() - start_down
-        tg_down_mbps = (file_size_mb * 8) / down_duration if down_duration > 0 else 0
-        tg_down_mbs = file_size_mb / down_duration if down_duration > 0 else 0
-        print(f"  - Telegram Download Speed: {tg_down_mbps:.2f} Mbps ({tg_down_mbs:.2f} MB/s)")
+        if custom_link:
+            print(f"  - Custom Telegram File Link Provided: {custom_link}")
+            # Format: https://t.me/c/chat_id/msg_id or https://t.me/channel/msg_id
+            parts = custom_link.strip().split("/")
+            if len(parts) >= 2:
+                chat_id = parts[-2]
+                msg_id = int(parts[-1])
+                if chat_id.isdigit() or chat_id.startswith("-"):
+                    chat_id = int(chat_id)
+                    if not str(chat_id).startswith("-100") and not str(chat_id).startswith("-"):
+                        chat_id = int(f"-100{chat_id}")
 
-        # Cleanup
-        await msg.delete()
-        if os.path.exists(test_file):
-            os.remove(test_file)
-        if down_path and os.path.exists(down_path):
-            os.remove(down_path)
+                msg = await app.get_messages(chat_id, msg_id)
+                if msg and (msg.document or msg.video or msg.audio):
+                    fsize_mb = (msg.document or msg.video or msg.audio).file_size / (1024 * 1024)
+                    print(f"  - Downloading Custom Telegram File ({fsize_mb:.2f} MB)...")
+                    start_down = time.time()
+                    down_path = await app.download_media(msg)
+                    down_duration = time.time() - start_down
+                    tg_down_mbps = (fsize_mb * 8) / down_duration if down_duration > 0 else 0
+                    print(f"  - Telegram Download Speed: {tg_down_mbps:.2f} Mbps ({fsize_mb/down_duration:.2f} MB/s)")
+                    if down_path and os.path.exists(down_path):
+                        os.remove(down_path)
+        else:
+            # Auto-generated benchmark file (default 50MB, configurable to 2000MB)
+            test_file = f"tg_benchmark_{file_size_mb}mb.dat"
+            print(f"  - Generating {file_size_mb} MB test payload...")
+            with open(test_file, "wb") as f:
+                f.write(os.urandom(file_size_mb * 1024 * 1024))
+
+            # Measure Telegram Upload Speed
+            print(f"  - Testing Telegram Upload Speed ({file_size_mb} MB)...")
+            start_up = time.time()
+            msg = await app.send_document("me", test_file, caption=f"Telegram Speedtest ({file_size_mb}MB)")
+            up_duration = time.time() - start_up
+            tg_up_mbps = (file_size_mb * 8) / up_duration if up_duration > 0 else 0
+            tg_up_mbs = file_size_mb / up_duration if up_duration > 0 else 0
+            print(f"  - Telegram Upload Speed: {tg_up_mbps:.2f} Mbps ({tg_up_mbs:.2f} MB/s)")
+
+            # Measure Telegram Download Speed
+            print(f"  - Testing Telegram Download Speed ({file_size_mb} MB)...")
+            start_down = time.time()
+            down_path = await app.download_media(msg)
+            down_duration = time.time() - start_down
+            tg_down_mbps = (file_size_mb * 8) / down_duration if down_duration > 0 else 0
+            tg_down_mbs = file_size_mb / down_duration if down_duration > 0 else 0
+            print(f"  - Telegram Download Speed: {tg_down_mbps:.2f} Mbps ({tg_down_mbs:.2f} MB/s)")
+
+            # Cleanup
+            await msg.delete()
+            if os.path.exists(test_file):
+                os.remove(test_file)
+            if down_path and os.path.exists(down_path):
+                os.remove(down_path)
+
         await app.stop()
-
         return tg_down_mbps, tg_up_mbps
     except Exception as e:
         print(f"  - Telegram Speedtest Error: {e}")

@@ -103,12 +103,12 @@ def update_readme(down_net, up_net, tg_down, tg_up, loc):
 ### ⚡ Speed Benchmark (1.91 GB)
 *Region: **{region}** | Updated: {ts}*
 
-| Benchmark | Speed (Mbps) | Speed (MB/s) |
+| Benchmark | Speed (MBPS) | Speed (MB/s) |
 |---|---|---|
-| ⬇️ Telegram Download (1.91 GB) | {tg_down:.2f} Mbps | {tg_down/8:.2f} MB/s |
-| ⬆️ Telegram Upload (1.91 GB) | {tg_up:.2f} Mbps | {tg_up/8:.2f} MB/s |
-| 🌐 Server Download | {down_net:.2f} Mbps | {down_net/8:.2f} MB/s |
-| 🌐 Server Upload | {up_net:.2f} Mbps | {up_net/8:.2f} MB/s |
+| ⬇️ Telegram Download (1.91 GB) | {tg_down:.2f} MBPS | {tg_down/8:.2f} MB/s |
+| ⬆️ Telegram Upload (1.91 GB) | {tg_up:.2f} MBPS | {tg_up/8:.2f} MB/s |
+| 🌐 Server Download | {down_net:.2f} MBPS | {down_net/8:.2f} MB/s |
+| 🌐 Server Upload | {up_net:.2f} MBPS | {up_net/8:.2f} MB/s |
 <!-- SPEEDTEST_END -->"""
 
     with open(readme_path, "r", encoding="utf-8") as f:

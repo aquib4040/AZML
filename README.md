@@ -33,7 +33,7 @@
 ### ⚡ Automated Speed Benchmark
 *Last Run: Pending workflow execution*
 
-| Benchmark | Speed (Mbps) | Speed (MB/s) |
+| Benchmark | Speed (MBPS) | Speed (MB/s) |
 |---|---|---|
 | ⬇️ Server Download | -- | -- |
 | ⬆️ Server Upload | -- | -- |

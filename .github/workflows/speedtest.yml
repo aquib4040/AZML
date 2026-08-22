@@ -9,6 +9,9 @@ jobs:
   speed-benchmark:
     name: Track Upload & Download Speed
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -30,3 +33,9 @@ jobs:
           TELEGRAM_HASH: ${{ secrets.TELEGRAM_HASH }}
         run: |
           python .github/scripts/speed_benchmark.py
+
+      - name: Commit & Push Updated README Benchmark
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Auto-update Speed Benchmark in README.md"
+          file_pattern: "README.md"

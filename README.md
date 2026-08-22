@@ -29,6 +29,17 @@
 
 ---
 
+<!-- SPEEDTEST_START -->
+### ⚡ Automated Speed Benchmark
+*Last Run: Pending workflow execution*
+
+| Benchmark | Speed (Mbps) | Speed (MB/s) |
+|---|---|---|
+| ⬇️ Server Download | -- | -- |
+| ⬆️ Server Upload | -- | -- |
+| ⚡ HTTP Download | -- | -- |
+<!-- SPEEDTEST_END -->
+
 ## Features
 
 <details>

@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 import time
 import asyncio
 import aiohttp
@@ -49,6 +50,33 @@ async def run_direct_download_benchmark():
         print(f"  - HTTP Download Benchmark Failed: {e}")
         return 0, 0
 
+def update_readme_benchmark(down_net, up_net, http_mbps, http_mbs):
+    readme_path = "README.md"
+    if not os.path.exists(readme_path):
+        return
+
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+    new_block = f"""<!-- SPEEDTEST_START -->
+### ⚡ Automated Speed Benchmark
+*Last Run: {timestamp}*
+
+| Benchmark | Speed (Mbps) | Speed (MB/s) |
+|---|---|---|
+| ⬇️ Server Download | {down_net:.2f} Mbps | {down_net/8:.2f} MB/s |
+| ⬆️ Server Upload | {up_net:.2f} Mbps | {up_net/8:.2f} MB/s |
+| ⚡ HTTP Download | {http_mbps:.2f} Mbps | {http_mbs:.2f} MB/s |
+<!-- SPEEDTEST_END -->"""
+
+    with open(readme_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    pattern = re.compile(r"<!-- SPEEDTEST_START -->.*?<!-- SPEEDTEST_END -->", re.DOTALL)
+    if pattern.search(content):
+        updated_content = pattern.sub(new_block, content)
+        with open(readme_path, "w", encoding="utf-8") as f:
+            f.write(updated_content)
+        print("\n  - Successfully updated README.md with benchmark results!")
+
 async def main():
     print("==========================================")
     print("  AZML CODE & NETWORK SPEED BENCHMARK")
@@ -64,19 +92,10 @@ async def main():
     print("\n=== 3. TELEGRAM BOT API STATUS ===")
     if bot_token and api_id and api_hash:
         print("  - Telegram Secrets Configured: YES")
-        print("  - Telegram Pyrogram Speed Test Ready.")
     else:
-        print("  - Telegram Secrets Configured: NO (Optional secrets BOT_TOKEN, TELEGRAM_API, TELEGRAM_HASH not set)")
+        print("  - Telegram Secrets Configured: NO")
 
-    print("\n==========================================")
-    print("  BENCHMARK SUMMARY")
-    print("==========================================")
-    print(f"| Metric | Speed (Mbps) | Speed (MB/s) |")
-    print(f"|---|---|---|")
-    print(f"| Server Download | {down_net:.2f} Mbps | {down_net/8:.2f} MB/s |")
-    print(f"| Server Upload   | {up_net:.2f} Mbps | {up_net/8:.2f} MB/s |")
-    print(f"| Direct Download | {http_mbps:.2f} Mbps | {http_mbs:.2f} MB/s |")
-    print("==========================================")
+    update_readme_benchmark(down_net, up_net, http_mbps, http_mbs)
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -53,7 +53,7 @@ async def parallel_download_media(app, msg, dest_path, num_workers=8, tracker=No
     try:
         media = getattr(msg, msg.media.value)
         file_size = media.file_size
-        chunk_bytes = 2 * 1024 * 1024  # 2 MB chunks
+        chunk_bytes = 1024 * 1024  # 1 MB chunks (Telegram API 1MB limit)
 
         with open(dest_path, "wb") as f:
             f.truncate(file_size)
@@ -64,7 +64,7 @@ async def parallel_download_media(app, msg, dest_path, num_workers=8, tracker=No
         for i in range(total_parts):
             off = i * chunk_bytes
             sz = min(chunk_bytes, file_size - off)
-            queue.put_nowait((off, sz))
+            queue.put_nowait((i, off, sz))
 
         downloaded_bytes = 0
         lock = asyncio.Lock()
@@ -73,13 +73,13 @@ async def parallel_download_media(app, msg, dest_path, num_workers=8, tracker=No
             nonlocal downloaded_bytes
             while not queue.empty():
                 try:
-                    off, sz = queue.get_nowait()
+                    i, off, sz = queue.get_nowait()
                 except asyncio.QueueEmpty:
                     break
 
                 part_data = bytearray()
+                offset_512k = i * 2  # 1MB = 2 x 512KB MTProto chunks
                 limit_512k = max(1, (sz + 512 * 1024 - 1) // (512 * 1024))
-                offset_512k = off // (512 * 1024)
                 
                 async for chunk in app.stream_media(msg, offset=offset_512k, limit=limit_512k):
                     part_data.extend(chunk)

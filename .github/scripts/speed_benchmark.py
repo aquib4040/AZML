@@ -39,15 +39,15 @@ async def run_telegram_speedtest(bot_token, api_id, api_hash):
         me = await app.get_me()
         print(f"  - Logged into Telegram Bot: @{me.username}")
 
-        # Check if custom file size or custom Telegram message link/ID is provided
         custom_link = os.environ.get("TEST_TELEGRAM_LINK", "")
-        file_size_mb = int(os.environ.get("BENCHMARK_FILE_SIZE_MB", "50"))
+        # Set default payload size to 1.91 GB (1956 MB)
+        file_size_mb = float(os.environ.get("BENCHMARK_FILE_SIZE_MB", "1956"))
+        file_size_gb = file_size_mb / 1024
 
         tg_down_mbps, tg_up_mbps = 0, 0
 
         if custom_link:
             print(f"  - Custom Telegram File Link Provided: {custom_link}")
-            # Format: https://t.me/c/chat_id/msg_id or https://t.me/channel/msg_id
             parts = custom_link.strip().split("/")
             if len(parts) >= 2:
                 chat_id = parts[-2]
@@ -60,7 +60,7 @@ async def run_telegram_speedtest(bot_token, api_id, api_hash):
                 msg = await app.get_messages(chat_id, msg_id)
                 if msg and (msg.document or msg.video or msg.audio):
                     fsize_mb = (msg.document or msg.video or msg.audio).file_size / (1024 * 1024)
-                    print(f"  - Downloading Custom Telegram File ({fsize_mb:.2f} MB)...")
+                    print(f"  - Downloading Custom Telegram File ({fsize_mb/1024:.2f} GB)...")
                     start_down = time.time()
                     down_path = await app.download_media(msg)
                     down_duration = time.time() - start_down
@@ -69,23 +69,32 @@ async def run_telegram_speedtest(bot_token, api_id, api_hash):
                     if down_path and os.path.exists(down_path):
                         os.remove(down_path)
         else:
-            # Auto-generated benchmark file (default 50MB, configurable to 2000MB)
-            test_file = f"tg_benchmark_{file_size_mb}mb.dat"
-            print(f"  - Generating {file_size_mb} MB test payload...")
+            # Generate 1.91 GB benchmark payload efficiently in chunks
+            test_file = f"tg_benchmark_{int(file_size_mb)}mb.dat"
+            print(f"  - Generating {file_size_gb:.2f} GB ({int(file_size_mb)} MB) test payload...")
+            
+            chunk_size_mb = 10
+            chunk = os.urandom(chunk_size_mb * 1024 * 1024)
+            num_chunks = int(file_size_mb // chunk_size_mb)
+            rem_bytes = int((file_size_mb % chunk_size_mb) * 1024 * 1024)
+
             with open(test_file, "wb") as f:
-                f.write(os.urandom(file_size_mb * 1024 * 1024))
+                for _ in range(num_chunks):
+                    f.write(chunk)
+                if rem_bytes > 0:
+                    f.write(os.urandom(rem_bytes))
 
             # Measure Telegram Upload Speed
-            print(f"  - Testing Telegram Upload Speed ({file_size_mb} MB)...")
+            print(f"  - Testing Telegram Upload Speed ({file_size_gb:.2f} GB)...")
             start_up = time.time()
-            msg = await app.send_document("me", test_file, caption=f"Telegram Speedtest ({file_size_mb}MB)")
+            msg = await app.send_document("me", test_file, caption=f"Telegram Speedtest ({file_size_gb:.2f} GB)")
             up_duration = time.time() - start_up
             tg_up_mbps = (file_size_mb * 8) / up_duration if up_duration > 0 else 0
             tg_up_mbs = file_size_mb / up_duration if up_duration > 0 else 0
             print(f"  - Telegram Upload Speed: {tg_up_mbps:.2f} Mbps ({tg_up_mbs:.2f} MB/s)")
 
             # Measure Telegram Download Speed
-            print(f"  - Testing Telegram Download Speed ({file_size_mb} MB)...")
+            print(f"  - Testing Telegram Download Speed ({file_size_gb:.2f} GB)...")
             start_down = time.time()
             down_path = await app.download_media(msg)
             down_duration = time.time() - start_down
@@ -113,13 +122,13 @@ def update_readme_benchmark(down_net, up_net, tg_down, tg_up):
 
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
     new_block = f"""<!-- SPEEDTEST_START -->
-### ⚡ Automated Speed Benchmark
+### ⚡ Automated Speed Benchmark (1.91 GB Payload)
 *Last Run: {timestamp}*
 
 | Benchmark | Speed (Mbps) | Speed (MB/s) |
 |---|---|---|
-| ⬇️ Telegram Download | {tg_down:.2f} Mbps | {tg_down/8:.2f} MB/s |
-| ⬆️ Telegram Upload | {tg_up:.2f} Mbps | {tg_up/8:.2f} MB/s |
+| ⬇️ Telegram Download (1.91 GB) | {tg_down:.2f} Mbps | {tg_down/8:.2f} MB/s |
+| ⬆️ Telegram Upload (1.91 GB) | {tg_up:.2f} Mbps | {tg_up/8:.2f} MB/s |
 | 🌐 Server Download | {down_net:.2f} Mbps | {down_net/8:.2f} MB/s |
 | 🌐 Server Upload | {up_net:.2f} Mbps | {up_net/8:.2f} MB/s |
 <!-- SPEEDTEST_END -->"""
@@ -132,7 +141,7 @@ def update_readme_benchmark(down_net, up_net, tg_down, tg_up):
         updated_content = pattern.sub(new_block, content)
         with open(readme_path, "w", encoding="utf-8") as f:
             f.write(updated_content)
-        print("\n  - Successfully updated README.md with Telegram benchmark results!")
+        print("\n  - Successfully updated README.md with 1.91 GB Telegram benchmark results!")
 
 async def main():
     print("==========================================")

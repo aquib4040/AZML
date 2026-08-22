@@ -5,12 +5,35 @@ import time
 import asyncio
 import aiohttp
 
-async def run_network_speedtest():
+async def run_network_speedtest(target_loc="EU"):
     print("=== 1. SERVER NETWORK SPEEDTEST ===")
     try:
         import speedtest
         st = speedtest.Speedtest(secure=True)
-        st.get_best_server()
+        
+        target_country = "United States" if target_loc.upper() in ["US", "DC1"] else "Netherlands"
+        print(f"  - Searching for Speedtest Servers in: {target_country}...")
+        
+        selected_server = None
+        try:
+            servers = st.get_servers()
+            matching = []
+            for s_list in servers.values():
+                for s in s_list:
+                    if target_country.lower() in s.get("country", "").lower():
+                        matching.append(s["id"])
+                        if len(matching) >= 5:
+                            break
+            if matching:
+                selected_server = st.get_best_server(matching)
+                print(f"  - Selected Server: {selected_server.get('sponsor')} ({selected_server.get('name')}, {selected_server.get('country')})")
+        except Exception as filter_err:
+            print(f"  - Server filtering notice: {filter_err}")
+
+        if not selected_server:
+            selected_server = st.get_best_server()
+            print(f"  - Auto Selected Server: {selected_server.get('sponsor')} ({selected_server.get('name')})")
+
         download_speed = st.download() / (1024 * 1024)  # Mbps
         upload_speed = st.upload() / (1024 * 1024)      # Mbps
         ping = st.results.ping
@@ -40,7 +63,6 @@ async def run_telegram_speedtest(bot_token, api_id, api_hash):
         print(f"  - Logged into Telegram Bot: @{me.username}")
 
         custom_link = os.environ.get("TEST_TELEGRAM_LINK", "")
-        # Set default payload size to 1.91 GB (1956 MB)
         file_size_mb = float(os.environ.get("BENCHMARK_FILE_SIZE_MB", "1956"))
         file_size_gb = file_size_mb / 1024
 
@@ -69,7 +91,6 @@ async def run_telegram_speedtest(bot_token, api_id, api_hash):
                     if down_path and os.path.exists(down_path):
                         os.remove(down_path)
         else:
-            # Generate 1.91 GB benchmark payload efficiently in chunks
             test_file = f"tg_benchmark_{int(file_size_mb)}mb.dat"
             print(f"  - Generating {file_size_gb:.2f} GB ({int(file_size_mb)} MB) test payload...")
             
@@ -84,7 +105,6 @@ async def run_telegram_speedtest(bot_token, api_id, api_hash):
                 if rem_bytes > 0:
                     f.write(os.urandom(rem_bytes))
 
-            # Measure Telegram Upload Speed
             print(f"  - Testing Telegram Upload Speed ({file_size_gb:.2f} GB)...")
             start_up = time.time()
             msg = await app.send_document("me", test_file, caption=f"Telegram Speedtest ({file_size_gb:.2f} GB)")
@@ -93,7 +113,6 @@ async def run_telegram_speedtest(bot_token, api_id, api_hash):
             tg_up_mbs = file_size_mb / up_duration if up_duration > 0 else 0
             print(f"  - Telegram Upload Speed: {tg_up_mbps:.2f} Mbps ({tg_up_mbs:.2f} MB/s)")
 
-            # Measure Telegram Download Speed
             print(f"  - Testing Telegram Download Speed ({file_size_gb:.2f} GB)...")
             start_down = time.time()
             down_path = await app.download_media(msg)
@@ -102,7 +121,6 @@ async def run_telegram_speedtest(bot_token, api_id, api_hash):
             tg_down_mbs = file_size_mb / down_duration if down_duration > 0 else 0
             print(f"  - Telegram Download Speed: {tg_down_mbps:.2f} Mbps ({tg_down_mbs:.2f} MB/s)")
 
-            # Cleanup
             await msg.delete()
             if os.path.exists(test_file):
                 os.remove(test_file)
@@ -115,15 +133,16 @@ async def run_telegram_speedtest(bot_token, api_id, api_hash):
         print(f"  - Telegram Speedtest Error: {e}")
         return 0, 0
 
-def update_readme_benchmark(down_net, up_net, tg_down, tg_up):
+def update_readme_benchmark(down_net, up_net, tg_down, tg_up, target_loc="EU"):
     readme_path = "README.md"
     if not os.path.exists(readme_path):
         return
 
+    region_label = "Europe (DC4 - Amsterdam)" if target_loc.upper() in ["EU", "DC4"] else "USA (DC1 - Miami)"
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
     new_block = f"""<!-- SPEEDTEST_START -->
 ### ⚡ Automated Speed Benchmark (1.91 GB Payload)
-*Last Run: {timestamp}*
+*Region Tested: **{region_label}** \| Last Run: {timestamp}*
 
 | Benchmark | Speed (Mbps) | Speed (MB/s) |
 |---|---|---|
@@ -141,14 +160,15 @@ def update_readme_benchmark(down_net, up_net, tg_down, tg_up):
         updated_content = pattern.sub(new_block, content)
         with open(readme_path, "w", encoding="utf-8") as f:
             f.write(updated_content)
-        print("\n  - Successfully updated README.md with 1.91 GB Telegram benchmark results!")
+        print("\n  - Successfully updated README.md with region-aware benchmark results!")
 
 async def main():
+    target_loc = os.environ.get("TG_DC_LOCATION", "EU").upper()
     print("==========================================")
-    print("  AZML TELEGRAM & NETWORK SPEED BENCHMARK")
+    print(f"  AZML TELEGRAM & NETWORK SPEED BENCHMARK [{target_loc}]")
     print("==========================================\n")
     
-    down_net, up_net, ping = await run_network_speedtest()
+    down_net, up_net, ping = await run_network_speedtest(target_loc)
     
     bot_token = os.environ.get("BOT_TOKEN")
     api_id = os.environ.get("TELEGRAM_API")
@@ -161,7 +181,7 @@ async def main():
         print("\n=== 2. TELEGRAM SPEEDTEST SKIPPED ===")
         print("  - Secrets BOT_TOKEN, TELEGRAM_API, or TELEGRAM_HASH not set.")
 
-    update_readme_benchmark(down_net, up_net, tg_down, tg_up)
+    update_readme_benchmark(down_net, up_net, tg_down, tg_up, target_loc)
 
 if __name__ == "__main__":
     asyncio.run(main())

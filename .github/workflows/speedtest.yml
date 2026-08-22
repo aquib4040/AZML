@@ -32,6 +32,7 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           TELEGRAM_API: ${{ secrets.TELEGRAM_API }}
           TELEGRAM_HASH: ${{ secrets.TELEGRAM_HASH }}
+          TG_DC_LOCATION: ${{ secrets.TG_DC_LOCATION || 'EU' }}
         run: |
           python .github/scripts/speed_benchmark.py
 

@@ -30,14 +30,12 @@
 ---
 
 <!-- SPEEDTEST_START -->
-### ⚡ Automated Speed Benchmark
-*Last Run: Pending workflow execution*
+### ⚡ Telegram Download Speed (1.91 GB)
+*Region: **Europe (DC4)** | Last Run: Pending workflow execution*
 
-| Benchmark | Speed (MBPS) | Speed (MB/s) |
-|---|---|---|
-| ⬇️ Server Download | -- | -- |
-| ⬆️ Server Upload | -- | -- |
-| ⚡ HTTP Download | -- | -- |
+| Benchmark | Speed |
+|---|---|
+| ⬇️ Telegram Download (1.91 GB) | -- MB/S |
 <!-- SPEEDTEST_END -->
 
 ## Features

@@ -4,6 +4,7 @@ import re
 import time
 import asyncio
 import aiohttp
+from inspect import signature
 
 def progress_callback(current, total, start_time, action_name):
     elapsed = time.time() - start_time
@@ -53,12 +54,18 @@ async def run_network_speedtest(target_loc="EU"):
         print(f"  - Network Speedtest Skipped/Failed: {e}")
         return 0, 0, 0
 
+def create_azml_tg_client(*args, **kwargs):
+    from pyrogram import Client
+    if "max_concurrent_transmissions" in signature(Client.__init__).parameters:
+        kwargs["max_concurrent_transmissions"] = 1000
+    if "workers" in signature(Client.__init__).parameters:
+        kwargs["workers"] = 100
+    return Client(*args, **kwargs)
+
 async def run_telegram_speedtest(bot_token, api_id, api_hash):
     print("\n=== 2. TELEGRAM FILE UPLOAD & DOWNLOAD SPEEDTEST ===")
     try:
-        from pyrogram import Client
-
-        app = Client(
+        app = create_azml_tg_client(
             "tg_speed_session",
             api_id=int(api_id),
             api_hash=api_hash,
@@ -67,7 +74,7 @@ async def run_telegram_speedtest(bot_token, api_id, api_hash):
         )
         await app.start()
         me = await app.get_me()
-        print(f"  - Logged into Telegram Bot: @{me.username}")
+        print(f"  - Logged into Telegram Bot: @{me.username} (AZML Concurrency: 1000 Max Transmissions)")
 
         custom_link = os.environ.get("TEST_TELEGRAM_LINK", "")
         file_size_mb = float(os.environ.get("BENCHMARK_FILE_SIZE_MB", "1956"))

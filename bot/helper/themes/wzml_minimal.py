@@ -308,5 +308,16 @@ class WZMLStyle:
 ┠ <b>Regex Remname :</b> <code>{LREMNAME_REGEX}</code>
 ┠ <b>Rename Method :</b> <i>{RENAME_METHOD}</i>
 ┠ <b>AutoRename :</b> <i>{AUTORENAME}</i>
-┠ <b>Auto Thumbnail :</b> <i>{AUTO_THUMB}</i>
-┖ <b>Leech Metadata :</b> <code>{LMETA}</code>"""
+┖ <b>Auto Thumbnail :</b> <i>{AUTO_THUMB}</i>"""
+
+    METADATA = """⌬ <b><u>ᴍᴇᴛᴀᴅᴀᴛᴀ sᴇᴛᴛɪɴɢs :</u></b> {NAME}
+
+┎ <b>Change All :</b> <code>{ALL}</code>
+┠ <b>Title :</b> <code>{TITLE}</code>
+┠ <b>Description :</b> <code>{DESCRIPTION}</code>
+┠ <b>Artist :</b> <code>{ARTIST}</code>
+┠ <b>Album :</b> <code>{ALBUM}</code>
+┠ <b>Year :</b> <code>{YEAR}</code>
+┠ <b>Audio Title :</b> <code>{AUDIO}</code>
+┖ <b>Subtitle Title :</b> <code>{SUBTITLE}</code>"""
+

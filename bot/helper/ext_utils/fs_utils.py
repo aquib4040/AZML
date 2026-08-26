@@ -252,7 +252,7 @@ async def join_files(path):
 
 
 async def edit_metadata(
-    listener, base_dir: str, media_file: str, outfile: str, metadata: str = ""
+    listener, base_dir: str, media_file: str, outfile: str, metadata = ""
 ):
     # Get user intro subtitle settings
     user_id = listener.user_id if hasattr(listener, 'user_id') else None
@@ -261,7 +261,31 @@ async def edit_metadata(
     
     if user_id:
         intro_settings = user_data.get(user_id, {}).get("intro_subtitle", {})
-    
+        if not metadata:
+            metadata = user_data.get(user_id, {}).get("metadata") or user_data.get(user_id, {}).get("lmeta", "")
+
+    # Extract metadata fields
+    if isinstance(metadata, dict):
+        all_val = metadata.get("all", "")
+        title = metadata.get("title") or all_val
+        description = metadata.get("description") or all_val
+        artist = metadata.get("artist") or all_val
+        album = metadata.get("album") or all_val
+        year = metadata.get("year") or all_val
+        audio = metadata.get("audio") or all_val
+        subtitle = metadata.get("subtitle") or all_val
+    elif isinstance(metadata, str):
+        all_val = metadata
+        title = all_val
+        description = all_val
+        artist = all_val
+        album = all_val
+        year = all_val
+        audio = all_val
+        subtitle = all_val
+    else:
+        title = description = artist = album = year = audio = subtitle = ""
+
     intro_enabled = intro_settings.get("enabled", True)
     wants_intro = intro_settings.get("text") and intro_enabled
     
@@ -288,46 +312,125 @@ async def edit_metadata(
             LOGGER.error(f"Error adding intro subtitle: {e}")
     
     # Add metadata
-    cmd.extend([
-        "-metadata",
-        f"title=Encoded By {metadata}",
-        "-metadata:s:v",
-        f"title={metadata}",
-        "-metadata",
-        "Comment=",
-        "-metadata",
-        "Copyright=",
-        "-metadata",
-        f"AUTHOR={metadata}",
-        "-metadata",
-        "Encoded by=",
-        "-metadata",
-        "SYNOPSIS=",
-        "-metadata",
-        "ARTIST=",
-        "-metadata",
-        "PURL=",
-        "-metadata",
-        "Encoded_by=",
-        "-metadata",
-        "Description=",
-        "-metadata",
-        "description=",
-        "-metadata",
-        "SUMMARY=",
-        "-metadata",
-        "WEBSITE=",
-        "-metadata:s:a",
-        f"title={metadata}",
-        "-metadata:s:s",
-        f"title={metadata}",
-        "-map",
-        "0:v:0?",
-        "-map",
-        "0:a:?",
-        "-map",
-        "0:s:?",
+    meta_args = []
+    
+    # Title
+    if title:
+        meta_args.extend([
+            "-metadata", f"title={title}",
+            "-metadata:s:v", f"title={title}",
+        ])
+    else:
+        meta_args.extend([
+            "-metadata", "title=",
+            "-metadata:s:v", "title=",
+        ])
+    
+    # Description / Synopsis / Comment / Summary
+    if description:
+        meta_args.extend([
+            "-metadata", f"description={description}",
+            "-metadata", f"comment={description}",
+            "-metadata", f"synopsis={description}",
+            "-metadata", f"summary={description}",
+            "-metadata", f"Comment={description}",
+            "-metadata", f"Description={description}",
+            "-metadata", f"SYNOPSIS={description}",
+            "-metadata", f"SUMMARY={description}",
+        ])
+    else:
+        meta_args.extend([
+            "-metadata", "description=",
+            "-metadata", "comment=",
+            "-metadata", "synopsis=",
+            "-metadata", "summary=",
+            "-metadata", "Comment=",
+            "-metadata", "Description=",
+            "-metadata", "SYNOPSIS=",
+            "-metadata", "SUMMARY=",
+        ])
+    
+    # Artist / Author / Encoded by
+    if artist:
+        meta_args.extend([
+            "-metadata", f"artist={artist}",
+            "-metadata", f"author={artist}",
+            "-metadata", f"ARTIST={artist}",
+            "-metadata", f"AUTHOR={artist}",
+            "-metadata", f"album_artist={artist}",
+            "-metadata", f"encoded_by={artist}",
+            "-metadata", f"Encoded by={artist}",
+            "-metadata", f"Encoded_by={artist}",
+        ])
+    else:
+        meta_args.extend([
+            "-metadata", "artist=",
+            "-metadata", "author=",
+            "-metadata", "ARTIST=",
+            "-metadata", "AUTHOR=",
+            "-metadata", "album_artist=",
+            "-metadata", "encoded_by=",
+            "-metadata", "Encoded by=",
+            "-metadata", "Encoded_by=",
+        ])
+        
+    # Album
+    if album:
+        meta_args.extend([
+            "-metadata", f"album={album}",
+            "-metadata", f"ALBUM={album}",
+        ])
+    else:
+        meta_args.extend([
+            "-metadata", "album=",
+            "-metadata", "ALBUM=",
+        ])
+
+    # Year / Date
+    if year:
+        meta_args.extend([
+            "-metadata", f"date={year}",
+            "-metadata", f"year={year}",
+            "-metadata", f"DATE={year}",
+            "-metadata", f"YEAR={year}",
+        ])
+    else:
+        meta_args.extend([
+            "-metadata", "date=",
+            "-metadata", "year=",
+            "-metadata", "DATE=",
+            "-metadata", "YEAR=",
+        ])
+
+    # Clear other generic junk metadata
+    meta_args.extend([
+        "-metadata", "Copyright=",
+        "-metadata", "copyright=",
+        "-metadata", "PURL=",
+        "-metadata", "purl=",
+        "-metadata", "WEBSITE=",
+        "-metadata", "website=",
     ])
+
+    # Audio title
+    if audio:
+        meta_args.extend(["-metadata:s:a", f"title={audio}"])
+    else:
+        meta_args.extend(["-metadata:s:a", "title="])
+
+    # Subtitle title
+    if subtitle:
+        meta_args.extend(["-metadata:s:s", f"title={subtitle}"])
+    else:
+        meta_args.extend(["-metadata:s:s", "title="])
+
+    meta_args.extend([
+        "-map", "0:v:0?",
+        "-map", "0:a:?",
+        "-map", "0:s:?",
+    ])
+
+    cmd.extend(meta_args)
     
     # Add softsub subtitle mapping if exists
     if srt_file and intro_settings.get("mode") == "softsub":

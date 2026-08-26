@@ -150,6 +150,38 @@ desp_dict = {
         "Your Channel Name that will be used while editing metadata of the Video File",
         "Send Metadata Text for Leeching Files.\n<b>Timeout:</b> 60 Sec.",
     ],
+    "meta_all": [
+        "Sets all metadata tags (Title, Description, Artist, Album, Year, Audio, Subtitle) to this value at once.",
+        "Send Metadata Text to apply to all fields.\n<b>Timeout:</b> 60 sec",
+    ],
+    "meta_title": [
+        "Title metadata tag for video and media files.",
+        "Send Title text for metadata.\n<b>Timeout:</b> 60 sec",
+    ],
+    "meta_description": [
+        "Description/Comment/Synopsis metadata tag for video and media files.",
+        "Send Description text for metadata.\n<b>Timeout:</b> 60 sec",
+    ],
+    "meta_artist": [
+        "Artist/Author/Encoded By metadata tag for video and media files.",
+        "Send Artist text for metadata.\n<b>Timeout:</b> 60 sec",
+    ],
+    "meta_album": [
+        "Album metadata tag for media files.",
+        "Send Album text for metadata.\n<b>Timeout:</b> 60 sec",
+    ],
+    "meta_year": [
+        "Year/Date metadata tag for video and media files.",
+        "Send Year/Date text for metadata (e.g. 2024).\n<b>Timeout:</b> 60 sec",
+    ],
+    "meta_audio": [
+        "Audio Stream Title metadata tag for video files.",
+        "Send Audio Title text for metadata.\n<b>Timeout:</b> 60 sec",
+    ],
+    "meta_subtitle": [
+        "Subtitle Stream Title metadata tag for video files.",
+        "Send Subtitle Title text for metadata.\n<b>Timeout:</b> 60 sec",
+    ],
     "ffmpeg_cmds": [
         "Custom FFmpeg Commands to process files before upload. Dict of list values for different profiles.",
         'Send FFmpeg Commands as JSON Dict.\n<b>Example:</b>\n<code>{"keep_japanese": ["-i mltb.video -map 0:v:0 -map 0:a:m:language:jpn -map 0:s:m:language:eng? -c copy mltb.mkv -del"]}</code>\n\n<b>Notes:</b>\n- <code>mltb.video</code> = all video files, <code>mltb.mkv</code> = output as mkv\n- <code>-del</code> = delete original after processing\n- Use <code>-ff key_name</code> in commands to execute\n<b>Timeout:</b> 60 sec',
@@ -173,6 +205,14 @@ fname_dict = {
     "intro_duration": "Intro Duration",
     "intro_fontsize": "Intro Font Size",
     "lmeta": "Metadata",
+    "meta_all": "Change All",
+    "meta_title": "Title",
+    "meta_description": "Description",
+    "meta_artist": "Artist",
+    "meta_album": "Album",
+    "meta_year": "Year",
+    "meta_audio": "Audio Title",
+    "meta_subtitle": "Subtitle Title",
     "mprefix": "Prefix",
     "msuffix": "Suffix",
     "mremname": "Remname",
@@ -203,8 +243,9 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
         buttons.ibutton("Universal Settings", f"userset {user_id} universal")
         buttons.ibutton("Mirror Settings", f"userset {user_id} mirror")
         buttons.ibutton("Leech Settings", f"userset {user_id} leech")
+        buttons.ibutton("Metadata Settings", f"userset {user_id} metadata")
         buttons.ibutton("Personal Upload Bot", f"userset {user_id} personal_bot")
-        if user_dict and any(key in user_dict for key in list(fname_dict.keys())):
+        if user_dict and any(key in user_dict for key in list(fname_dict.keys()) + ["metadata"]):
             buttons.ibutton("Reset Setting", f"userset {user_id} reset_all")
         buttons.ibutton("Close", f"userset {user_id} close")
 
@@ -518,16 +559,6 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
         buttons.ibutton("Leech Dump", f"userset {user_id} ldump")
         ldump = "Not Exists" if (val := user_dict.get("ldump", "")) == "" else len(val)
 
-        lmeta = (
-            "Not Exists"
-            if (val := user_dict.get("lmeta", config_dict.get("METADATA", ""))) == ""
-            else val
-        )
-        buttons.ibutton(
-            f"{'✅️' if lmeta != 'Not Exists' else ''} Metadata",
-            f"userset {user_id} lmeta",
-        )
-        
         # Intro Subtitle button
         intro_subtitle = user_dict.get("intro_subtitle", {})
         has_intro = intro_subtitle.get("text", "") != ""
@@ -563,10 +594,79 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             LREMNAME_AUTO=escape(lremname_auto),
             LREMNAME_REGEX=escape(lremname_regex),
             RENAME_METHOD="Auto Rename" if user_dict.get("rename_method", "auto") == "auto" else "Regex",
-            LMETA=escape(lmeta),
             AUTORENAME="Enabled" if autorename_enabled else "Disabled",
             AUTO_THUMB="Enabled" if auto_thumb else "Disabled",
         )
+
+        buttons.ibutton("Back", f"userset {user_id} back", "footer")
+        buttons.ibutton("Close", f"userset {user_id} close", "footer")
+        button = buttons.build_menu(2)
+    elif key == "metadata":
+        meta_dict = user_dict.get("metadata", {})
+        if isinstance(meta_dict, str):
+            meta_dict = {"all": meta_dict}
+        elif not meta_dict and user_dict.get("lmeta"):
+            meta_dict = {"all": user_dict.get("lmeta", "")}
+
+        all_val = meta_dict.get("all", config_dict.get("METADATA", ""))
+        title_val = meta_dict.get("title", "")
+        desc_val = meta_dict.get("description", "")
+        artist_val = meta_dict.get("artist", "")
+        album_val = meta_dict.get("album", "")
+        year_val = meta_dict.get("year", "")
+        audio_val = meta_dict.get("audio", "")
+        sub_val = meta_dict.get("subtitle", "")
+
+        text = BotTheme(
+            "METADATA",
+            NAME=name,
+            ALL=escape(all_val) if all_val else "Not Set",
+            TITLE=escape(title_val) if title_val else (escape(all_val) + " (Default)" if all_val else "Not Set"),
+            DESCRIPTION=escape(desc_val) if desc_val else (escape(all_val) + " (Default)" if all_val else "Not Set"),
+            ARTIST=escape(artist_val) if artist_val else (escape(all_val) + " (Default)" if all_val else "Not Set"),
+            ALBUM=escape(album_val) if album_val else (escape(all_val) + " (Default)" if all_val else "Not Set"),
+            YEAR=escape(year_val) if year_val else (escape(all_val) + " (Default)" if all_val else "Not Set"),
+            AUDIO=escape(audio_val) if audio_val else (escape(all_val) + " (Default)" if all_val else "Not Set"),
+            SUBTITLE=escape(sub_val) if sub_val else (escape(all_val) + " (Default)" if all_val else "Not Set"),
+        )
+        text += "\n\n➲ <b>Description :</b> <i>Configure custom video and media metadata tags. Use <b>Change All</b> to set all fields at once, or configure each field individually.</i>"
+
+        buttons.ibutton(
+            f"{'✅️' if all_val else ''} Change All",
+            f"userset {user_id} meta_all",
+        )
+        buttons.ibutton(
+            f"{'✅️' if title_val else ''} Title",
+            f"userset {user_id} meta_title",
+        )
+        buttons.ibutton(
+            f"{'✅️' if desc_val else ''} Description",
+            f"userset {user_id} meta_description",
+        )
+        buttons.ibutton(
+            f"{'✅️' if artist_val else ''} Artist",
+            f"userset {user_id} meta_artist",
+        )
+        buttons.ibutton(
+            f"{'✅️' if album_val else ''} Album",
+            f"userset {user_id} meta_album",
+        )
+        buttons.ibutton(
+            f"{'✅️' if year_val else ''} Year",
+            f"userset {user_id} meta_year",
+        )
+        buttons.ibutton(
+            f"{'✅️' if audio_val else ''} Audio Title",
+            f"userset {user_id} meta_audio",
+        )
+        buttons.ibutton(
+            f"{'✅️' if sub_val else ''} Subtitle Title",
+            f"userset {user_id} meta_subtitle",
+        )
+
+        has_any = any([all_val, title_val, desc_val, artist_val, album_val, year_val, audio_val, sub_val])
+        if has_any:
+            buttons.ibutton("🗑️ Reset All", f"userset {user_id} reset_metadata", "footer")
 
         buttons.ibutton("Back", f"userset {user_id} back", "footer")
         buttons.ibutton("Close", f"userset {user_id} close", "footer")
@@ -769,6 +869,22 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             set_exist = "Not Exists" if set_exist == "" else set_exist
             text = f"➲ <b>{fname_dict[key]} :</b> {set_exist}\n\n"
         
+        elif key.startswith("meta_"):
+            field = key[5:]
+            meta_dict = user_dict.get("metadata", {})
+            if isinstance(meta_dict, str):
+                meta_dict = {"all": meta_dict}
+            elif not meta_dict and user_dict.get("lmeta"):
+                meta_dict = {"all": user_dict.get("lmeta", "")}
+            val = meta_dict.get(field, "")
+            if not val and field != "all" and meta_dict.get("all"):
+                set_exist = f"{meta_dict.get('all')} (Default)"
+            elif not val and field == "all" and config_dict.get("METADATA"):
+                set_exist = f"{config_dict.get('METADATA')} (Bot Default)"
+            else:
+                set_exist = val if val else "Not Exists"
+            text += f"➲ <b>Metadata {fname_dict[key]} :</b> <code>{escape(set_exist)}</code>\n\n"
+        
         elif key == "ffmpeg_cmds":
             ffc = user_dict.get("ffmpeg_cmds", {})
             if ffc:
@@ -956,6 +1072,14 @@ async def user_settings(client, message):
                     "ldump",
                     "yt_opt",
                     "lmeta",
+                    "meta_all",
+                    "meta_title",
+                    "meta_description",
+                    "meta_artist",
+                    "meta_album",
+                    "meta_year",
+                    "meta_audio",
+                    "meta_subtitle",
                     "intro_text",
                     "intro_duration",
                     "intro_fontsize",
@@ -980,8 +1104,22 @@ async def user_settings(client, message):
     /cmd -s lremname
 ➲ <b>Leech Filename Caption :</b>
     /cmd -s lcaption
-➲ <b>Leech Metadata Text :</b>
-    /cmd -s lmeta
+➲ <b>All Metadata Text :</b>
+    /cmd -s meta_all
+➲ <b>Title Metadata :</b>
+    /cmd -s meta_title
+➲ <b>Description Metadata :</b>
+    /cmd -s meta_description
+➲ <b>Artist Metadata :</b>
+    /cmd -s meta_artist
+➲ <b>Album Metadata :</b>
+    /cmd -s meta_album
+➲ <b>Year Metadata :</b>
+    /cmd -s meta_year
+➲ <b>Audio Title Metadata :</b>
+    /cmd -s meta_audio
+➲ <b>Subtitle Title Metadata :</b>
+    /cmd -s meta_subtitle
 ➲ <b>YT-DLP Options :</b>
     /cmd -s yt_opt
 ➲ <b>Leech User Dump :</b>
@@ -1136,6 +1274,33 @@ async def set_custom(client, message, pre_event, key, direct=False):
             await sendMessage(message, "❌ <b>Invalid JSON format!</b>\nSend a valid JSON dict.\nExample: <code>{\"keep_japanese\": [\"-i mltb.video -map 0:v:0 -c copy mltb.mkv\"]}</code>")
             await update_user_settings(pre_event, key, "leech", msg=message, sdirect=direct)
             return
+    elif key.startswith("meta_"):
+        field = key[5:]
+        meta_dict = user_dict.get("metadata", {})
+        if isinstance(meta_dict, str):
+            meta_dict = {"all": meta_dict}
+        elif not meta_dict and user_dict.get("lmeta"):
+            meta_dict = {"all": user_dict.get("lmeta", "")}
+        else:
+            meta_dict = dict(meta_dict)
+        meta_dict[field] = value
+        if field == "all":
+            update_user_ldata(user_id, "lmeta", value)
+        value = meta_dict
+        n_key = "metadata"
+        return_key = "metadata"
+    elif key == "lmeta":
+        meta_dict = user_dict.get("metadata", {})
+        if isinstance(meta_dict, str):
+            meta_dict = {"all": meta_dict}
+        elif not meta_dict:
+            meta_dict = {}
+        else:
+            meta_dict = dict(meta_dict)
+        meta_dict["all"] = value
+        update_user_ldata(user_id, "metadata", meta_dict)
+        update_user_ldata(user_id, "lmeta", value)
+        return_key = "metadata"
     elif key in ["intro_text", "intro_duration", "intro_fontsize"]:
         # Handle intro subtitle fields inline
         intro_settings = user_dict.get("intro_subtitle", {})
@@ -1353,7 +1518,7 @@ async def edit_user_settings(client, query):
     user_dict = user_data.get(user_id, {})
     if user_id != int(data[1]):
         await query.answer("Not Yours!", show_alert=True)
-    elif data[2] in ["universal", "mirror", "leech", "personal_bot"]:
+    elif data[2] in ["universal", "mirror", "leech", "personal_bot", "metadata"]:
         await query.answer()
         await update_user_settings(query, data[2])
     elif data[2] == "toggle_pbot":
@@ -1821,6 +1986,37 @@ async def edit_user_settings(client, query):
             "mirror" if data[2] in ["ddl_servers", "user_tds"] else "ddl_servers",
         )
         await wait_for_input(query, pfunc, rfunc)
+    elif data[2].startswith("meta_"):
+        handler_dict[user_id] = False
+        await query.answer()
+        edit_mode = len(data) == 4
+        await update_user_settings(query, data[2], "metadata", edit_mode)
+        if not edit_mode:
+            return
+        pfunc = partial(set_custom, pre_event=query, key=data[2])
+        rfunc = partial(update_user_settings, query, data[2], "metadata")
+        await wait_for_input(query, pfunc, rfunc)
+    elif data[2].startswith("dmeta_"):
+        handler_dict[user_id] = False
+        await query.answer()
+        field = data[2][6:]
+        meta_dict = user_dict.get("metadata", {})
+        if isinstance(meta_dict, dict) and field in meta_dict:
+            del meta_dict[field]
+            update_user_ldata(user_id, "metadata", meta_dict)
+        if field == "all":
+            update_user_ldata(user_id, "lmeta", "")
+        await update_user_settings(query, f"meta_{field}", "metadata")
+        if DATABASE_URL:
+            await DbManger().update_user_data(user_id)
+    elif data[2] == "reset_metadata":
+        handler_dict[user_id] = False
+        await query.answer("Metadata settings reset!", show_alert=True)
+        update_user_ldata(user_id, "metadata", {})
+        update_user_ldata(user_id, "lmeta", "")
+        await update_user_settings(query, "metadata")
+        if DATABASE_URL:
+            await DbManger().update_user_data(user_id)
     elif data[2] in [
         "lprefix",
         "lsuffix",

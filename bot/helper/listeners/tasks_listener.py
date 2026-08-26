@@ -460,9 +460,20 @@ class MirrorLeechListener:
         intro_subtitle = self.user_dict.get("intro_subtitle", {})
         has_intro_subtitle = intro_subtitle.get("text", "") != "" and intro_subtitle.get("enabled", True)
         
-        if metadata := self.user_dict.get("lmeta") or config_dict["METADATA"] or has_intro_subtitle:
+        user_meta = self.user_dict.get("metadata")
+        user_lmeta = self.user_dict.get("lmeta")
+        config_meta = config_dict.get("METADATA", "")
+        
+        metadata = user_meta if user_meta else (user_lmeta or config_meta)
+        has_metadata = False
+        if isinstance(metadata, dict):
+            has_metadata = any(bool(v) for v in metadata.values())
+        elif isinstance(metadata, str) and metadata.strip():
+            has_metadata = True
+        
+        if has_metadata or has_intro_subtitle:
             # If only intro subtitle without metadata, use a default metadata value
-            if not metadata and has_intro_subtitle:
+            if not has_metadata and has_intro_subtitle:
                 metadata = "animeshrine.xyz"  # Default metadata when only intro subtitle is set
             
             meta_path = up_path or dl_path

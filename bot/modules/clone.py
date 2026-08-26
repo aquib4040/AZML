@@ -37,7 +37,6 @@ from bot.helper.ext_utils.bot_utils import (
     sync_to_async,
     fetch_user_tds,
     is_share_link,
-    new_task,
     is_rclone_path,
     cmd_exec,
     get_telegraph_list,

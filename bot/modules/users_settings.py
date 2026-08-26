@@ -570,9 +570,6 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
 
         # FFmpeg Commands button
         ffmpeg_cmds = user_dict.get("ffmpeg_cmds", {})
-        ffmpeg_status = "Not Set"
-        if ffmpeg_cmds:
-            ffmpeg_status = ", ".join(ffmpeg_cmds.keys())
         buttons.ibutton(
             f"{'✅️' if ffmpeg_cmds else ''} 🎬 FFmpeg Cmds",
             f"userset {user_id} ffmpeg_cmds",

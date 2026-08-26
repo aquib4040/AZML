@@ -89,7 +89,7 @@ async def do(func, message):
     try:
         with redirect_stdout(stdout):
             func_return = await func()
-    except Exception as e:
+    except Exception:
         value = stdout.getvalue()
         return f"{value}{format_exc()}"
     else:

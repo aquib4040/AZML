@@ -706,7 +706,6 @@ class MirrorLeechListener:
             await DbManger().rm_complete_task(self.message.link)
         user_id = self.message.from_user.id
         name, _ = await format_filename(name, user_id, isMirror=not self.isLeech, custom_name=self.custom_name)
-        user_dict = user_data.get(user_id, {})
         msg = BotTheme(
             "NAME",
             Name=(
@@ -728,7 +727,6 @@ class MirrorLeechListener:
             if mime_type != 0:
                 msg += BotTheme("L_CORRUPTED_FILES", Corrupt=mime_type)
             msg += BotTheme("L_CC", Tag=self.tag)
-            btn_added = False
 
             if not files:
                 await sendMessage(self.message, msg, photo=self.random_pic)

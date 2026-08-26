@@ -402,7 +402,6 @@ async def character(_, message, aniid=None, u_id=None):
     ):
         msg = f"<b>{json.get('name').get('full')}</b> (<code>{json.get('name').get('native')}</code>)\n\n"
         description = json["description"]
-        site_url = json.get("siteUrl")
         siteid = json.get("id")
         if "~!" in description and "!~" in description:
             btn = ButtonMaker()
@@ -495,7 +494,6 @@ async def manga(_, message):
         info = json["siteUrl"]
         buttons = ButtonMaker()
         buttons.ubutton("🎬 AniList Info", info)
-        bimage = json.get("bannerImage", False)
         image = f"https://img.anili.st/media/{json.get('id')}"
         description = json.get('description', 'No description available.')
         msg += f"\n\n{description}"

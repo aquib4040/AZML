@@ -25,7 +25,7 @@ from bot.helper.ext_utils.bot_utils import (
 )
 from bot.helper.ext_utils.fs_utils import ARCH_EXT, get_mime_type
 from bot.helper.ext_utils.telegraph_helper import telegraph
-import re
+
 
 async def extract_metadata_from_filename(filename, filepath=None):
     metadata = {
@@ -982,12 +982,6 @@ async def get_ss(up_path, ss_no):
         LOGGER.error(f"Error processing screenshots: {e}")
         return None
 
-def get_md5_hash(file_path):
-    hash_md5 = md5()
-    with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
 
 async def get_mediainfo_link(up_path):
     try:

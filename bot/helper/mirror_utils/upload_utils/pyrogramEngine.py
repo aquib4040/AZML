@@ -325,7 +325,6 @@ class TgUploader:
             self.__thumb = None
 
     async def __msg_to_reply(self):
-        msg_link = self.__listener.message.link if self.__listener.isSuperGroup else ""
         msg_user = self.__listener.message.from_user
         if config_dict["LEECH_LOG_ID"] and not self.__listener.excep_chat:
             try:

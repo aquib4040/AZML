@@ -224,7 +224,7 @@ async def sendMessage(message, text, buttons=None, photo=None, **kwargs):
                 await sendMessage(message, text, buttons, des_dir)
                 await aioremove(des_dir)
                 return
-            except Exception as e:
+            except Exception:
                 LOGGER.error(format_exc())
         return await message.reply(
             text=text,
@@ -278,7 +278,7 @@ async def sendCustomMsg(chat_id, text, buttons=None, photo=None, debug=False):
                 await sendCustomMsg(chat_id, text, buttons, des_dir)
                 await aioremove(des_dir)
                 return
-            except Exception as e:
+            except Exception:
                 LOGGER.error(format_exc())
         return await bot.send_message(
             chat_id=chat_id,
@@ -741,7 +741,7 @@ async def check_botpm(message, button=None):
         )
         await deleteMessage(temp_msg)
         return None, button
-    except Exception as e:
+    except Exception:
         if button is None:
             button = ButtonMaker()
         _msg = "<i>You didn't START the bot in PM (Private)</i>"

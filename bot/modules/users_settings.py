@@ -184,7 +184,7 @@ desp_dict = {
     ],
     "ffmpeg_cmds": [
         "Custom FFmpeg Commands to process files before upload. Dict of list values for different profiles.",
-        'Send FFmpeg Commands as JSON Dict.\n<b>Example:</b>\n<code>{"keep_japanese": ["-i mltb.video -map 0:v:0 -map 0:a:m:language:jpn -map 0:s:m:language:eng? -c copy mltb.mkv -del"]}</code>\n\n<b>Notes:</b>\n- <code>mltb.video</code> = all video files, <code>mltb.mkv</code> = output as mkv\n- <code>-del</code> = delete original after processing\n- Use <code>-ff key_name</code> in commands to execute\n<b>Timeout:</b> 60 sec',
+        'Send FFmpeg Commands as JSON Dict.\n<b>Example:</b>\n<code>{"keep_japanese": ["-i mltb.video -map 0:v:0 -map 0:a:m:language:jpn -map 0:s:m:language:eng? -c copy mltb.mkv -del"]}</code>\n\n<b>Notes:</b>\n- <code>mltb.video</code> = all video files, <code>mltb.mkv</code> = output as mkv\n- <code>-del</code> = delete original after processing\n- <b>Re-encoding is blocked by default</b> to prevent server abuse (must use <code>-c copy</code> or stream dropping)\n- Use <code>-ff key_name</code> in commands to execute\n<b>Timeout:</b> 60 sec',
     ],
     "pbot_token": [
         "Personal Upload Bot Token to perform uploads on behalf of you.",
@@ -1260,6 +1260,8 @@ async def set_custom(client, message, pre_event, key, direct=False):
         return_key = "universal"
     elif key == "ffmpeg_cmds":
         import json
+        from shlex import split as ssplit
+        from bot.helper.ext_utils.ffmpeg_utils import check_ffmpeg_command_safety
         try:
             parsed = json.loads(value)
             if not isinstance(parsed, dict):
@@ -1269,6 +1271,25 @@ async def set_custom(client, message, pre_event, key, direct=False):
             for k, v in parsed.items():
                 if not isinstance(v, list):
                     parsed[k] = [v]
+            
+            # If encoding is disabled, validate all commands to ensure no re-encoding
+            if not config_dict.get("FFMPEG_ENCODING", False):
+                for profile_name, cmd_list in parsed.items():
+                    for cmd_item in cmd_list:
+                        parts = [p.strip() for p in ssplit(str(cmd_item)) if p.strip()]
+                        is_safe, reason = check_ffmpeg_command_safety(parts)
+                        if not is_safe:
+                            await sendMessage(
+                                message,
+                                f"❌ <b>FFmpeg Encoding is Disabled!</b>\n\n"
+                                f"<b>Profile:</b> <code>{escape(profile_name)}</code>\n"
+                                f"<b>Command:</b> <code>{escape(str(cmd_item))}</code>\n"
+                                f"<b>Reason:</b> {reason}\n\n"
+                                f"<i>Note: Re-encoding is blocked by default to prevent server exploitation. Only stream copy (<code>-c copy</code>), stream mapping (<code>-map</code>), and stream removal are allowed.</i>",
+                            )
+                            await update_user_settings(pre_event, key, "leech", msg=message, sdirect=direct)
+                            return
+
             value = parsed
         except json.JSONDecodeError:
             await sendMessage(message, "❌ <b>Invalid JSON format!</b>\nSend a valid JSON dict.\nExample: <code>{\"keep_japanese\": [\"-i mltb.video -map 0:v:0 -c copy mltb.mkv\"]}</code>")

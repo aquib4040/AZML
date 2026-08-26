@@ -77,6 +77,8 @@ default_values = {
     "TMDB_ACCESS_TOKEN": "",
     "AUTO_THUMBNAIL": False,
     "NYAA_PROXY": False,
+    "ENABLE_FFMPEG_CMDS": True,
+    "FFMPEG_ENCODING": False,
 }
 bool_vars = [
     "AS_DOCUMENT",
@@ -101,6 +103,8 @@ bool_vars = [
     "SCREENSHOTS_MODE",
     "AUTO_THUMBNAIL",
     "NYAA_PROXY",
+    "ENABLE_FFMPEG_CMDS",
+    "FFMPEG_ENCODING",
 ]
 
 
@@ -632,6 +636,12 @@ async def load_config():
     if len(TIMEZONE) == 0:
         TIMEZONE = "Asia/Kolkata"
 
+    ENABLE_FFMPEG_CMDS = environ.get("ENABLE_FFMPEG_CMDS", "")
+    ENABLE_FFMPEG_CMDS = ENABLE_FFMPEG_CMDS.lower() != "false"
+
+    FFMPEG_ENCODING = environ.get("FFMPEG_ENCODING", "")
+    FFMPEG_ENCODING = FFMPEG_ENCODING.lower() == "true"
+
     list_drives_dict.clear()
     if GDRIVE_ID:
         list_drives_dict["Main"] = {"drive_id": GDRIVE_ID, "index_link": INDEX_URL}
@@ -800,6 +810,8 @@ async def load_config():
             "TMDB_ACCESS_TOKEN": TMDB_ACCESS_TOKEN,
             "AUTO_THUMBNAIL": AUTO_THUMBNAIL,
             "NYAA_PROXY": NYAA_PROXY,
+            "ENABLE_FFMPEG_CMDS": ENABLE_FFMPEG_CMDS,
+            "FFMPEG_ENCODING": FFMPEG_ENCODING,
         }
     )
 

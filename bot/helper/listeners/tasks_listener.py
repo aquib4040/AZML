@@ -438,6 +438,10 @@ class MirrorLeechListener:
 
         # ===== Custom FFmpeg Commands =====
         if self.ffmpeg_cmds:
+            if not config_dict.get("ENABLE_FFMPEG_CMDS", True):
+                LOGGER.warning("FFmpeg commands are disabled in bot settings.")
+                await self.onUploadError("FFmpeg commands (-ff) are currently disabled by the bot owner in Bot Settings.")
+                return
             ffmpeg_path = up_path or dl_path
             resolved = await resolve_ffmpeg_cmds(self.ffmpeg_cmds, self.user_id)
             if resolved:
@@ -452,7 +456,7 @@ class MirrorLeechListener:
                     dl_path = result
             else:
                 LOGGER.error(f"Failed to resolve FFmpeg commands: {self.ffmpeg_cmds}")
-                await self.onUploadError(f"FFmpeg key '{self.ffmpeg_cmds}' not found in your FFMPEG_CMDS settings!")
+                await self.onUploadError(f"FFmpeg key '{self.ffmpeg_cmds}' not found in your FFMPEG_CMDS settings or invalid!")
                 return
 
         # Check if metadata OR intro subtitle is configured

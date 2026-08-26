@@ -10,6 +10,67 @@ from bot.helper.ext_utils.leech_utils import get_document_type
 from bot.helper.ext_utils.bot_utils import cmd_exec
 
 
+def check_ffmpeg_command_safety(cmd_parts: list) -> tuple[bool, str]:
+    """Validates an FFmpeg command to ensure no video/audio re-encoding occurs when encoding is disabled.
+    
+    Returns (is_safe: bool, reason: str).
+    """
+    blocked_flags = [
+        "-vf", "-filter:v", "-af", "-filter:a", "-filter_complex", "-lavfi", "-filter", "-fpre",
+        "-crf", "-b:v", "-b:a", "-b", "-bitrate", "-maxrate", "-minrate", "-bufsize",
+        "-qscale", "-q:v", "-q:a", "-q", "-preset", "-tune", "-profile:v", "-profile:a",
+        "-level", "-pix_fmt", "-r", "-framerate", "-fpsmax", "-s", "-video_size",
+        "-aspect", "-ar", "-ac", "-ab",
+    ]
+
+    for i, arg in enumerate(cmd_parts):
+        arg_lower = arg.lower()
+
+        # Check blocked filter and rate/quality flags
+        if arg_lower in blocked_flags or any(arg_lower.startswith(f"{f}:") for f in ["-filter", "-b", "-q", "-profile"]):
+            return False, f"Flag '{arg}' requires re-encoding which is disabled in Bot Settings."
+
+        # Check codec flags
+        if arg_lower in ["-c", "-codec", "-vcodec", "-acodec", "-scodec", "-c:v", "-c:a", "-c:s", "-c:d"] or \
+           arg_lower.startswith(("-c:", "-codec:")):
+            if i + 1 < len(cmd_parts):
+                val = cmd_parts[i + 1].lower()
+                # Allowed values: 'copy' or 'none' (to drop stream)
+                if val not in ["copy", "none"]:
+                    return False, f"Codec '{val}' requires re-encoding. Only 'copy' or stream removal is allowed."
+            else:
+                return False, f"Missing codec value after '{arg}'."
+
+    # Verify that stream copying is explicitly enforced so FFmpeg does not default to re-encoding
+    args_lower = [a.lower() for a in cmd_parts]
+    
+    # Check for global -c copy or -codec copy
+    has_global_copy = False
+    for i in range(len(cmd_parts) - 1):
+        if args_lower[i] in ["-c", "-codec"] and args_lower[i + 1] == "copy":
+            has_global_copy = True
+            break
+
+    # Check video stream handling
+    has_video_copy_or_drop = "-vn" in args_lower or any(
+        (args_lower[i] in ["-c:v", "-vcodec"] or args_lower[i].startswith(("-c:v:", "-codec:v:")))
+        and i + 1 < len(args_lower) and args_lower[i + 1] in ["copy", "none"]
+        for i in range(len(cmd_parts))
+    )
+
+    # Check audio stream handling
+    has_audio_copy_or_drop = "-an" in args_lower or any(
+        (args_lower[i] in ["-c:a", "-acodec"] or args_lower[i].startswith(("-c:a:", "-codec:a:")))
+        and i + 1 < len(args_lower) and args_lower[i + 1] in ["copy", "none"]
+        for i in range(len(cmd_parts))
+    )
+
+    if not has_global_copy and not (has_video_copy_or_drop and has_audio_copy_or_drop):
+        return False, "FFmpeg command must specify '-c copy' or explicit '-c:v copy' / '-c:a copy' to prevent default re-encoding."
+
+    return True, ""
+
+
 async def resolve_ffmpeg_cmds(ffmpeg_cmds, user_id):
     """Resolve named ffmpeg command keys (e.g., 'keep_japanese') to actual command strings.
 
@@ -20,6 +81,10 @@ async def resolve_ffmpeg_cmds(ffmpeg_cmds, user_id):
     Returns:
         A list of raw ffmpeg command strings, or None if resolution fails.
     """
+    if not config_dict.get("ENABLE_FFMPEG_CMDS", True):
+        LOGGER.error("FFmpeg commands are disabled in bot settings.")
+        return None
+
     if isinstance(ffmpeg_cmds, list):
         return ffmpeg_cmds
 
@@ -64,9 +129,22 @@ async def proceed_ffmpeg(listener, dl_path, ffmpeg_cmds, gid):
     """
     from bot.helper.ext_utils.fs_utils import get_path_size
 
+    if not config_dict.get("ENABLE_FFMPEG_CMDS", True):
+        LOGGER.warning(f"FFmpeg commands disabled in bot settings. Skipping for {dl_path}")
+        return dl_path
+
+    allow_encoding = config_dict.get("FFMPEG_ENCODING", False)
+
     cmds = []
     for item in ffmpeg_cmds:
         parts = [p.strip() for p in split(item) if p.strip()]
+        if not allow_encoding:
+            is_safe, reason = check_ffmpeg_command_safety(parts)
+            if not is_safe:
+                LOGGER.error(f"FFmpeg command blocked (encoding disabled): {reason}. Cmd: {item}")
+                if hasattr(listener, "onUploadError"):
+                    await listener.onUploadError(f"FFmpeg command blocked (encoding is disabled): {reason}")
+                return False
         cmds.append(parts)
 
     for ffmpeg_cmd in cmds:

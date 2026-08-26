@@ -542,6 +542,8 @@ default_desp = {
     "USE_SERVICE_ACCOUNTS": "Whether to use Service Accounts or not, with google-api-python-client. For this to work see Using Service Accounts section below. Default is False",
     "WEB_PINCODE": " Whether to ask for pincode before selecting files from torrent in web or not. Default is False. Bool.",
     "YT_DLP_OPTIONS": 'Default yt-dlp options. Check all possible options HERE or use this script to convert cli arguments to api options. Format: key:value|key:value|key:value. Add ^ before integer or float, some numbers must be numeric and some string. \nExample: "format:bv*+mergeall[vcodec=none]|nocheckcertificate:True"',
+    "ENABLE_FFMPEG_CMDS": "Enable or disable custom FFmpeg commands (-ff) globally. Default is True. Bool.",
+    "FFMPEG_ENCODING": "Allow video and audio re-encoding in custom FFmpeg commands. If False, only stream copying (-c copy), stream mapping, and track removal are allowed and all re-encoding is blocked. Default is False. Bool.",
 }
 
 MIRROR_HELP_PAGE = """

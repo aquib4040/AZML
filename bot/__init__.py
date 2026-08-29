@@ -109,8 +109,6 @@ DATABASE_URL = environ.get("DATABASE_URL", "")
 if len(DATABASE_URL) == 0:
     DATABASE_URL = ""
 
-INITIAL_PORT = environ.get("PORT") or environ.get("BASE_URL_PORT")
-
 if DATABASE_URL:
     conn = MongoClient(DATABASE_URL)
     db = conn.canonleech

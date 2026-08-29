@@ -48,51 +48,95 @@ def check_cloudflared_binary():
         LOGGER.error(f"Failed to download cloudflared: {e}")
         return None
 
-def start_cloudflared_tunnel(port=85):
+_cf_process = None
+
+
+def start_cloudflared_tunnel(port=85, max_retries=3):
+    global _cf_process
     binary = check_cloudflared_binary()
     if not binary:
         LOGGER.error("Cannot start Cloudflare tunnel: cloudflared binary missing.")
         return None
 
-    # Use environment override if provided, otherwise default to 11687
-    tunnel_port = os.environ.get("CF_PORT", port)
-    cmd = [binary, "tunnel", "--url", f"http://localhost:{tunnel_port}"]
-    LOGGER.info(f"Launching Cloudflare quick tunnel targeting port {tunnel_port}...")
-
+    # Kill any stale cloudflared processes from previous runs
     try:
-        proc = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1,
-            universal_newlines=True
-        )
-    except Exception as e:
-        LOGGER.error(f"Error launching cloudflared process: {e}")
-        return None
-
-    cf_url = None
-    url_pattern = re.compile(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com")
-    start_t = time.time()
-
-    # Wait up to 30 seconds for Cloudflare to return tunnel URL
-    while time.time() - start_t < 30:
-        line = proc.stdout.readline()
-        if not line:
-            if proc.poll() is not None:
-                break
+        if sys.platform != "win32":
+            subprocess.run(["pkill", "-f", "cloudflared.*tunnel"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
             time.sleep(0.5)
+    except Exception:
+        pass
+
+    tunnel_port = os.environ.get("CF_PORT", port)
+    url_pattern = re.compile(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com")
+
+    for attempt in range(1, max_retries + 1):
+        cmd = [binary, "tunnel", "--no-autoupdate", "--url", f"http://127.0.0.1:{tunnel_port}"]
+        LOGGER.info(f"Launching Cloudflare quick tunnel targeting port {tunnel_port} (Attempt {attempt}/{max_retries})...")
+
+        captured_output = []
+        try:
+            proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1,
+                universal_newlines=True,
+            )
+            _cf_process = proc
+        except Exception as e:
+            LOGGER.error(f"Error launching cloudflared process: {e}")
+            time.sleep(2)
             continue
 
-        LOGGER.debug(f"[cloudflared] {line.strip()}")
-        match = url_pattern.search(line)
-        if match:
-            cf_url = match.group(0)
-            LOGGER.info(f"Cloudflare Tunnel successfully connected: {cf_url}")
-            break
+        cf_url = None
+        start_t = time.time()
 
-    if not cf_url:
-        LOGGER.error("Failed to retrieve Cloudflare Quick Tunnel URL.")
+        # Wait up to 35 seconds for Cloudflare to return tunnel URL
+        while time.time() - start_t < 35:
+            if proc.poll() is not None:
+                rest, _ = proc.communicate()
+                if rest:
+                    for l in rest.splitlines():
+                        clean_l = l.strip()
+                        if clean_l:
+                            captured_output.append(clean_l)
+                            LOGGER.info(f"[cloudflared] {clean_l}")
+                            match = url_pattern.search(clean_l)
+                            if match:
+                                cf_url = match.group(0)
+                break
 
-    return cf_url
+            line = proc.stdout.readline()
+            if not line:
+                time.sleep(0.2)
+                continue
+
+            clean_line = line.strip()
+            captured_output.append(clean_line)
+            LOGGER.info(f"[cloudflared] {clean_line}")
+
+            match = url_pattern.search(clean_line)
+            if match:
+                cf_url = match.group(0)
+                LOGGER.info(f"Cloudflare Tunnel successfully connected: {cf_url}")
+                return cf_url
+
+        if cf_url:
+            return cf_url
+
+        LOGGER.warning(f"Attempt {attempt} failed to establish Cloudflare quick tunnel.")
+        try:
+            proc.terminate()
+            proc.wait(timeout=2)
+        except Exception:
+            try:
+                proc.kill()
+            except Exception:
+                pass
+
+        if attempt < max_retries:
+            time.sleep(3)
+
+    LOGGER.error("Failed to retrieve Cloudflare Quick Tunnel URL after all retries.")
+    return None

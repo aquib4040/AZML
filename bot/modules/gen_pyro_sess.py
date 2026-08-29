@@ -111,7 +111,10 @@ Get from https://my.telegram.org</i>.
                 break
     try:
         pyro_client = Client(
-            f"WZML-X-{message.from_user.id}", api_id=api_id, api_hash=api_hash
+            f"WZML-X-{message.from_user.id}",
+            api_id=api_id,
+            api_hash=api_hash,
+            in_memory=True,
         )
     except Exception as e:
         await editMessage(sess_msg, f"<b>Client Error:</b> {str(e)}")

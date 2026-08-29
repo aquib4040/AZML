@@ -12,6 +12,7 @@ from threading import Thread
 from time import sleep, time
 from subprocess import Popen, run as srun
 from os import remove as osremove, path as ospath, environ, getcwd
+from glob import glob
 from aria2p import API as ariaAPI, Client as ariaClient
 from qbittorrentapi import Client as qbClient
 from socket import setdefaulttimeout
@@ -52,6 +53,13 @@ getLogger("aiohttp").setLevel(ERROR)
 getLogger("httpx").setLevel(ERROR)
 
 LOGGER = getLogger(__name__)
+
+# Cleanup any stale/corrupted session files to avoid sqlite schema conflicts
+for _sess in glob("*.session*"):
+    try:
+        osremove(_sess)
+    except Exception:
+        pass
 
 if ospath.exists("config.env"):
     load_dotenv("config.env", override=False)
@@ -100,6 +108,8 @@ bot_id = BOT_TOKEN.split(":", 1)[0]
 DATABASE_URL = environ.get("DATABASE_URL", "")
 if len(DATABASE_URL) == 0:
     DATABASE_URL = ""
+
+INITIAL_PORT = environ.get("PORT") or environ.get("BASE_URL_PORT")
 
 if DATABASE_URL:
     conn = MongoClient(DATABASE_URL)
@@ -240,6 +250,8 @@ if len(EXCEP_CHATS) == 0:
 def wztgClient(*args, **kwargs):
     if "max_concurrent_transmissions" in signature(tgClient.__init__).parameters:
         kwargs["max_concurrent_transmissions"] = 1000
+    if "in_memory" not in kwargs:
+        kwargs["in_memory"] = True
     return tgClient(*args, **kwargs)
 
 
@@ -256,6 +268,7 @@ if len(USER_SESSION_STRING) != 0:
             session_string=USER_SESSION_STRING,
             parse_mode=enums.ParseMode.HTML,
             no_updates=True,
+            in_memory=True,
         ).start()
         IS_PREMIUM_USER = user.me.is_premium
     except Exception as e:
@@ -928,6 +941,7 @@ bot = wztgClient(
     bot_token=BOT_TOKEN,
     workers=1000,
     parse_mode=enums.ParseMode.HTML,
+    in_memory=True,
 ).start()
 bot_loop = bot.loop
 bot_name = bot.me.username

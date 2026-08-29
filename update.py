@@ -7,6 +7,7 @@ from logging import (
     info as log_info,
 )
 from os import path as ospath, environ, remove
+from glob import glob
 from subprocess import run as srun, call as scall
 from importlib.metadata import distributions
 from requests import get as rget
@@ -19,6 +20,12 @@ if ospath.exists("log.txt"):
 
 if ospath.exists("rlog.txt"):
     remove("rlog.txt")
+
+for f in glob("*.session*"):
+    try:
+        remove(f)
+    except Exception:
+        pass
 
 basicConfig(
     format="[%(asctime)s] [%(levelname)s] - %(message)s",

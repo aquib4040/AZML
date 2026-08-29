@@ -66,8 +66,28 @@ def start_cloudflared_tunnel(port=85, max_retries=3):
     except Exception:
         pass
 
+    cf_token = os.environ.get("CLOUDFLARE_TOKEN") or os.environ.get("CF_TOKEN") or os.environ.get("TUNNEL_TOKEN")
     tunnel_port = os.environ.get("CF_PORT", port)
+
+    # 1. Named Tunnel via Token (Zero rate limits, permanent URL)
+    if cf_token:
+        LOGGER.info("Launching Cloudflare Named Tunnel with permanent token...")
+        cmd = [binary, "tunnel", "--no-autoupdate", "run", "--token", cf_token]
+        try:
+            _cf_process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            LOGGER.info("Cloudflare Named Tunnel started successfully.")
+            return os.environ.get("BASE_URL")
+        except Exception as e:
+            LOGGER.error(f"Error launching named Cloudflare tunnel: {e}")
+            return None
+
+    # 2. Quick Tunnel on trycloudflare.com
     url_pattern = re.compile(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com")
+    rate_limited = False
 
     for attempt in range(1, max_retries + 1):
         cmd = [binary, "tunnel", "--no-autoupdate", "--url", f"http://127.0.0.1:{tunnel_port}"]
@@ -102,6 +122,8 @@ def start_cloudflared_tunnel(port=85, max_retries=3):
                         if clean_l:
                             captured_output.append(clean_l)
                             LOGGER.info(f"[cloudflared] {clean_l}")
+                            if "1015" in clean_l or "429" in clean_l:
+                                rate_limited = True
                             match = url_pattern.search(clean_l)
                             if match:
                                 cf_url = match.group(0)
@@ -115,6 +137,8 @@ def start_cloudflared_tunnel(port=85, max_retries=3):
             clean_line = line.strip()
             captured_output.append(clean_line)
             LOGGER.info(f"[cloudflared] {clean_line}")
+            if "1015" in clean_line or "429" in clean_line:
+                rate_limited = True
 
             match = url_pattern.search(clean_line)
             if match:
@@ -135,8 +159,15 @@ def start_cloudflared_tunnel(port=85, max_retries=3):
             except Exception:
                 pass
 
+        if rate_limited:
+            LOGGER.warning("Cloudflare trycloudflare.com temporary rate-limit (Error 1015 / 429) detected for this IP.")
+            break
+
         if attempt < max_retries:
             time.sleep(3)
 
-    LOGGER.error("Failed to retrieve Cloudflare Quick Tunnel URL after all retries.")
+    if rate_limited:
+        LOGGER.error("Cloudflare Quick Tunnels is rate-limited on your IP due to frequent restarts. You can provide BASE_URL directly in config.env or wait ~15 minutes for Cloudflare's 1015 cooldown.")
+    else:
+        LOGGER.error("Failed to retrieve Cloudflare Quick Tunnel URL after all retries.")
     return None

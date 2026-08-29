@@ -314,120 +314,119 @@ async def edit_metadata(
     # Add metadata
     meta_args = []
     
-    # Title
+    # Title & Show / Series (sets container + video stream title + show/series on container and all streams)
+    title_tags = ["title", "TITLE", "Title", "movie", "MOVIE", "show", "SHOW", "Show", "series", "SERIES", "Series"]
     if title:
+        for tag in title_tags:
+            meta_args.extend(["-metadata", f"{tag}={title}"])
         meta_args.extend([
-            "-metadata", f"title={title}",
             "-metadata:s:v", f"title={title}",
+            "-metadata:s:v", f"TITLE={title}",
         ])
+        for tag in ["show", "SHOW", "Show", "series", "SERIES", "Series"]:
+            meta_args.extend(["-metadata:s", f"{tag}={title}"])
     else:
+        for tag in title_tags:
+            meta_args.extend(["-metadata", f"{tag}="])
         meta_args.extend([
-            "-metadata", "title=",
             "-metadata:s:v", "title=",
+            "-metadata:s:v", "TITLE=",
         ])
-    
-    # Description / Synopsis / Comment / Summary
+        for tag in ["show", "SHOW", "Show", "series", "SERIES", "Series"]:
+            meta_args.extend(["-metadata:s", f"{tag}="])
+
+    # Description / Synopsis / Comment / Summary (sets container + all streams)
+    desc_tags = [
+        "description", "Description", "DESCRIPTION",
+        "comment", "Comment", "COMMENT",
+        "synopsis", "Synopsis", "SYNOPSIS",
+        "summary", "Summary", "SUMMARY",
+        "longdescription", "LongDescription", "LONGDESCRIPTION",
+    ]
     if description:
-        meta_args.extend([
-            "-metadata", f"description={description}",
-            "-metadata", f"comment={description}",
-            "-metadata", f"synopsis={description}",
-            "-metadata", f"summary={description}",
-            "-metadata", f"Comment={description}",
-            "-metadata", f"Description={description}",
-            "-metadata", f"SYNOPSIS={description}",
-            "-metadata", f"SUMMARY={description}",
-        ])
+        for tag in desc_tags:
+            meta_args.extend(["-metadata", f"{tag}={description}", "-metadata:s", f"{tag}={description}"])
     else:
-        meta_args.extend([
-            "-metadata", "description=",
-            "-metadata", "comment=",
-            "-metadata", "synopsis=",
-            "-metadata", "summary=",
-            "-metadata", "Comment=",
-            "-metadata", "Description=",
-            "-metadata", "SYNOPSIS=",
-            "-metadata", "SUMMARY=",
-        ])
-    
-    # Artist / Author / Encoded by
+        for tag in desc_tags:
+            meta_args.extend(["-metadata", f"{tag}=", "-metadata:s", f"{tag}="])
+
+    # Artist / Author / Encoded by / Publisher / Composer / Performer (sets container + all streams)
+    artist_tags = [
+        "artist", "Artist", "ARTIST",
+        "author", "Author", "AUTHOR",
+        "album_artist", "Album_Artist", "ALBUM_ARTIST", "Album Artist",
+        "encoded_by", "Encoded by", "Encoded_by", "ENCODED_BY",
+        "encoder", "Encoder", "ENCODER",
+        "composer", "Composer", "COMPOSER",
+        "performer", "Performer", "PERFORMER",
+    ]
     if artist:
-        meta_args.extend([
-            "-metadata", f"artist={artist}",
-            "-metadata", f"author={artist}",
-            "-metadata", f"ARTIST={artist}",
-            "-metadata", f"AUTHOR={artist}",
-            "-metadata", f"album_artist={artist}",
-            "-metadata", f"encoded_by={artist}",
-            "-metadata", f"Encoded by={artist}",
-            "-metadata", f"Encoded_by={artist}",
-        ])
+        for tag in artist_tags:
+            meta_args.extend(["-metadata", f"{tag}={artist}", "-metadata:s", f"{tag}={artist}"])
     else:
-        meta_args.extend([
-            "-metadata", "artist=",
-            "-metadata", "author=",
-            "-metadata", "ARTIST=",
-            "-metadata", "AUTHOR=",
-            "-metadata", "album_artist=",
-            "-metadata", "encoded_by=",
-            "-metadata", "Encoded by=",
-            "-metadata", "Encoded_by=",
-        ])
-        
-    # Album
+        for tag in artist_tags:
+            meta_args.extend(["-metadata", f"{tag}=", "-metadata:s", f"{tag}="])
+
+    # Album (sets container + all streams)
+    album_tags = ["album", "Album", "ALBUM", "collection", "Collection", "COLLECTION"]
     if album:
-        meta_args.extend([
-            "-metadata", f"album={album}",
-            "-metadata", f"ALBUM={album}",
-        ])
+        for tag in album_tags:
+            meta_args.extend(["-metadata", f"{tag}={album}", "-metadata:s", f"{tag}={album}"])
     else:
-        meta_args.extend([
-            "-metadata", "album=",
-            "-metadata", "ALBUM=",
-        ])
+        for tag in album_tags:
+            meta_args.extend(["-metadata", f"{tag}=", "-metadata:s", f"{tag}="])
 
-    # Year / Date
+    # Year / Date (sets container + all streams)
+    year_tags = [
+        "date", "Date", "DATE",
+        "year", "Year", "YEAR",
+        "date_released", "Date_Released", "DATE_RELEASED",
+        "date_written", "Date_Written", "DATE_WRITTEN",
+        "date_recorded", "Date_Recorded", "DATE_RECORDED",
+    ]
     if year:
-        meta_args.extend([
-            "-metadata", f"date={year}",
-            "-metadata", f"year={year}",
-            "-metadata", f"DATE={year}",
-            "-metadata", f"YEAR={year}",
-        ])
+        for tag in year_tags:
+            meta_args.extend(["-metadata", f"{tag}={year}", "-metadata:s", f"{tag}={year}"])
     else:
-        meta_args.extend([
-            "-metadata", "date=",
-            "-metadata", "year=",
-            "-metadata", "DATE=",
-            "-metadata", "YEAR=",
-        ])
+        for tag in year_tags:
+            meta_args.extend(["-metadata", f"{tag}=", "-metadata:s", f"{tag}="])
 
-    # Clear other generic junk metadata
-    meta_args.extend([
-        "-metadata", "Copyright=",
-        "-metadata", "copyright=",
-        "-metadata", "PURL=",
-        "-metadata", "purl=",
-        "-metadata", "WEBSITE=",
-        "-metadata", "website=",
-    ])
+    # Clear other generic junk metadata from container and all streams
+    junk_tags = [
+        "copyright", "Copyright", "COPYRIGHT",
+        "purl", "PURL",
+        "website", "Website", "WEBSITE",
+        "url", "URL",
+        "publisher", "Publisher", "PUBLISHER",
+        "license", "License", "LICENSE",
+        "law_rating", "LAW_RATING",
+        "track", "Track", "TRACK", "tracknumber", "TRACKNUMBER",
+        "disc", "Disc", "DISC", "discnumber", "DISCNUMBER",
+        "genre", "Genre", "GENRE",
+        "season_number", "SEASON_NUMBER",
+        "episode_id", "EPISODE_ID",
+        "episode_sort", "EPISODE_SORT",
+    ]
+    for tag in junk_tags:
+        meta_args.extend(["-metadata", f"{tag}=", "-metadata:s", f"{tag}="])
 
     # Audio title
     if audio:
-        meta_args.extend(["-metadata:s:a", f"title={audio}"])
+        meta_args.extend(["-metadata:s:a", f"title={audio}", "-metadata:s:a", f"TITLE={audio}"])
     else:
-        meta_args.extend(["-metadata:s:a", "title="])
+        meta_args.extend(["-metadata:s:a", "title=", "-metadata:s:a", "TITLE="])
 
     # Subtitle title
     if subtitle:
-        meta_args.extend(["-metadata:s:s", f"title={subtitle}"])
+        meta_args.extend(["-metadata:s:s", f"title={subtitle}", "-metadata:s:s", f"TITLE={subtitle}"])
     else:
-        meta_args.extend(["-metadata:s:s", "title="])
+        meta_args.extend(["-metadata:s:s", "title=", "-metadata:s:s", "TITLE="])
 
     meta_args.extend([
         "-map", "0:v:0?",
         "-map", "0:a:?",
         "-map", "0:s:?",
+        "-map", "0:t?",
     ])
 
     cmd.extend(meta_args)
@@ -463,6 +462,8 @@ async def edit_metadata(
         "-c:a",
         "copy",
         "-c:s",
+        "copy",
+        "-c:t",
         "copy",
         outfile,
         "-y",

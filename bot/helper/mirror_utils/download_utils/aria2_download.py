@@ -22,6 +22,12 @@ async def add_aria2c_download(link, path, listener, filename, header, ratio, see
     a2c_opt = {**aria2_options}
     [a2c_opt.pop(k) for k in aria2c_global if k in aria2_options]
     a2c_opt["dir"] = path
+    if "split" not in a2c_opt:
+        a2c_opt["split"] = "16"
+    if "max-connection-per-server" not in a2c_opt:
+        a2c_opt["max-connection-per-server"] = "16"
+    if "min-split-size" not in a2c_opt:
+        a2c_opt["min-split-size"] = "1M"
     if filename:
         a2c_opt["out"] = filename
     if header:

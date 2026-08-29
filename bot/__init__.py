@@ -847,6 +847,17 @@ if not BASE_URL:
         config_dict["BASE_URL"] = cf_url
         environ["BASE_URL"] = cf_url
         log_info(f"Cloudflare Tunnel created and set as BASE_URL: {BASE_URL}")
+    else:
+        try:
+            from requests import get as rget
+            vps_ip = rget("https://api.ipify.org", timeout=5).text.strip()
+            port = environ.get("HOST_PORT") or environ.get("PORT") or BASE_URL_PORT
+            BASE_URL = f"http://{vps_ip}:{port}"
+            config_dict["BASE_URL"] = BASE_URL
+            environ["BASE_URL"] = BASE_URL
+            log_info(f"Using Direct IP as BASE_URL: {BASE_URL}")
+        except Exception:
+            pass
 
 srun(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
 if not ospath.exists(".netrc"):

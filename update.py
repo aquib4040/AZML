@@ -78,12 +78,13 @@ if UPGRADE_PACKAGES.lower() == "true":
     scall("uv pip install --system " + " ".join(packages), shell=True)
 
 UPSTREAM_REPO = environ.get("UPSTREAM_REPO", "")
-if len(UPSTREAM_REPO) == 0:
-    UPSTREAM_REPO = None
-
-UPSTREAM_BRANCH = environ.get("UPSTREAM_BRANCH", "")
-if len(UPSTREAM_BRANCH) == 0:
+if "WZMLakane" in UPSTREAM_REPO or len(UPSTREAM_REPO) == 0:
+    UPSTREAM_REPO = "https://github.com/aquib4040/AZML"
     UPSTREAM_BRANCH = "main"
+else:
+    UPSTREAM_BRANCH = environ.get("UPSTREAM_BRANCH", "main")
+    if len(UPSTREAM_BRANCH) == 0:
+        UPSTREAM_BRANCH = "main"
 
 if UPSTREAM_REPO is not None:
     if "github_pat_" in UPSTREAM_REPO and "@github.com" not in UPSTREAM_REPO:

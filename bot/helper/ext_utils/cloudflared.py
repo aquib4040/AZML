@@ -5,9 +5,18 @@ import time
 import shutil
 import urllib.request
 import subprocess
+import threading
 from logging import getLogger
 
 LOGGER = getLogger("cloudflared")
+
+def _drain_stdout(proc):
+    try:
+        for line in iter(proc.stdout.readline, ''):
+            if not line:
+                break
+    except Exception:
+        pass
 
 def check_cloudflared_binary():
     # 1. Check system PATH
@@ -144,6 +153,7 @@ def start_cloudflared_tunnel(port=85, max_retries=3):
             if match:
                 cf_url = match.group(0)
                 LOGGER.info(f"Cloudflare Tunnel successfully connected: {cf_url}")
+                threading.Thread(target=_drain_stdout, args=(proc,), daemon=True).start()
                 return cf_url
 
         if cf_url:

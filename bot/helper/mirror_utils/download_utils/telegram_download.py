@@ -6,6 +6,8 @@ from pyrogram import Client
 from aiohttp import ClientSession, ClientTimeout, ClientError
 import asyncio
 
+from secrets import token_hex
+
 from bot import (
     LOGGER,
     download_dict,
@@ -57,8 +59,9 @@ class TelegramDownloadHelper:
         return self.__processed_bytes
 
     async def __onDownloadStart(self, name, size, file_id, from_queue):
-        async with global_lock:
-            GLOBAL_GID.add(file_id)
+        if config_dict["STOP_DUPLICATE"] and not self.__listener.isLeech and self.__listener.upPath == "gd":
+            async with global_lock:
+                GLOBAL_GID.add(file_id)
         self.name = name
         self.__id = file_id
         async with download_dict_lock:
@@ -85,17 +88,16 @@ class TelegramDownloadHelper:
         self.__processed_bytes = current
 
     async def __onDownloadError(self, error):
-        async with global_lock:
-            try:
-                GLOBAL_GID.remove(self.__id)
-            except Exception:
-                pass
+        if self.__id:
+            async with global_lock:
+                GLOBAL_GID.discard(self.__id)
         await self.__listener.onDownloadError(error)
 
     async def __onDownloadComplete(self):
         await self.__listener.onDownloadComplete()
-        async with global_lock:
-            GLOBAL_GID.remove(self.__id)
+        if self.__id:
+            async with global_lock:
+                GLOBAL_GID.discard(self.__id)
 
     async def __download(self, message, path):
         try:
@@ -189,8 +191,11 @@ class TelegramDownloadHelper:
         media = getattr(message, message.media.value) if message.media else None
 
         if media is not None:
-            async with global_lock:
-                download = media.file_unique_id not in GLOBAL_GID
+            if config_dict["STOP_DUPLICATE"] and not self.__listener.isLeech and self.__listener.upPath == "gd":
+                async with global_lock:
+                    download = media.file_unique_id not in GLOBAL_GID
+            else:
+                download = True
 
             if download:
                 if filename == "":
@@ -202,7 +207,7 @@ class TelegramDownloadHelper:
                     name = "None"
                 path = path + name
                 size = media.file_size
-                gid = media.file_unique_id
+                gid = token_hex(5)
 
                 msg, button = await stop_duplicate_check(name, self.__listener)
                 if msg:

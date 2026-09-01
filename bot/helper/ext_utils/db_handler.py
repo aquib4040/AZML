@@ -38,7 +38,13 @@ class DbManger:
     async def db_load(self):
         if self.__err:
             return
-        # Save bot settings
+        # Save bot settings - preserve existing db settings
+        db_doc = await self.__db.settings.config.find_one({"_id": bot_id})
+        if db_doc:
+            del db_doc["_id"]
+            for k, v in db_doc.items():
+                if (config_dict.get(k) in [None, "", False] or k not in config_dict) and v not in [None, "", False]:
+                    config_dict[k] = v
         await self.__db.settings.config.update_one(
             {"_id": bot_id}, {"$set": config_dict}, upsert=True
         )

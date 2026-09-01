@@ -60,16 +60,13 @@ if DATABASE_URL is not None:
     db = conn.canonleech
     old_config = db.settings.deployConfig.find_one({"_id": bot_id})
     config_dict = db.settings.config.find_one({"_id": bot_id})
-    if old_config is not None:
-        del old_config["_id"]
-    if (
-        old_config is not None
-        and old_config == dict(dotenv_values("config.env"))
-        or old_config is None
-    ) and config_dict is not None:
-        environ["UPSTREAM_REPO"] = config_dict["UPSTREAM_REPO"]
-        environ["UPSTREAM_BRANCH"] = config_dict["UPSTREAM_BRANCH"]
-        environ["UPGRADE_PACKAGES"] = config_dict.get("UPDATE_PACKAGES", "False")
+    if config_dict is not None:
+        if config_dict.get("UPSTREAM_REPO"):
+            environ["UPSTREAM_REPO"] = str(config_dict["UPSTREAM_REPO"])
+        if config_dict.get("UPSTREAM_BRANCH"):
+            environ["UPSTREAM_BRANCH"] = str(config_dict["UPSTREAM_BRANCH"])
+        if config_dict.get("UPDATE_PACKAGES"):
+            environ["UPGRADE_PACKAGES"] = str(config_dict.get("UPDATE_PACKAGES"))
     conn.close()
 
 UPGRADE_PACKAGES = environ.get("UPGRADE_PACKAGES", "False")

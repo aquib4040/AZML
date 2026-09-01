@@ -86,6 +86,11 @@ if len(UPSTREAM_BRANCH) == 0:
     UPSTREAM_BRANCH = "main"
 
 if UPSTREAM_REPO is not None:
+    if "github_pat_" in UPSTREAM_REPO and "@github.com" not in UPSTREAM_REPO:
+        parts = UPSTREAM_REPO.split("github_pat_")
+        if len(parts) == 2 and "/" in parts[1]:
+            token_part, repo_part = parts[1].split("/", 1)
+            UPSTREAM_REPO = f"{parts[0]}github_pat_{token_part}@github.com/{repo_part}"
     if ospath.exists(".git"):
         srun(["rm", "-rf", ".git"])
 

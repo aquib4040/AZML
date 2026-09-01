@@ -840,7 +840,7 @@ Popen(
     shell=True,
 )
 
-if not BASE_URL:
+if not BASE_URL or "trycloudflare.com" in BASE_URL:
     cf_url = start_cloudflared_tunnel(BASE_URL_PORT)
     if cf_url:
         BASE_URL = cf_url

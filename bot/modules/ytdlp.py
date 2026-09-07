@@ -18,6 +18,7 @@ from bot.helper.telegram_helper.message_utils import (
     delete_links,
     open_category_btns,
     open_dump_btns,
+    get_tagged_user,
 )
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.bot_utils import (
@@ -403,8 +404,7 @@ async def _ytdl(client, message, isLeech=False, sameDir=None, bulk=[]):
     path = f"{DOWNLOAD_DIR}{message.id}{folder_name}"
 
     if len(text) > 1 and text[1].startswith("Tag: "):
-        tag, id_ = text[1].split("Tag: ")[1].split()
-        message.from_user = await client.get_users(id_)
+        message.from_user = await get_tagged_user(client, text[1], message.from_user)
         try:
             await message.unpin()
         except Exception:
@@ -412,16 +412,21 @@ async def _ytdl(client, message, isLeech=False, sameDir=None, bulk=[]):
     elif sender_chat := message.sender_chat:
         tag = sender_chat.title
 
-    user_id = message.from_user.id
+    user_id = message.from_user.id if message.from_user else 0
 
     user_dict = user_data.get(user_id, {})
 
     opt = opt or user_dict.get("yt_opt") or config_dict["YT_DLP_OPTIONS"]
 
-    if username := message.from_user.username:
-        tag = f"@{username}"
+    if message.from_user:
+        if username := message.from_user.username:
+            tag = f"@{username}"
+        elif hasattr(message.from_user, "mention"):
+            tag = message.from_user.mention
+        else:
+            tag = str(message.from_user.id)
     else:
-        tag = message.from_user.mention
+        tag = ""
 
     if not link and (reply_to := message.reply_to_message) and reply_to.text:
         link = reply_to.text.split("\n", 1)[0].strip()

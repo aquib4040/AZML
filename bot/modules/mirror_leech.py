@@ -63,6 +63,7 @@ from bot.helper.telegram_helper.message_utils import (
     auto_delete_message,
     open_category_btns,
     open_dump_btns,
+    get_tagged_user,
 )
 from bot.helper.listeners.tasks_listener import MirrorLeechListener
 from bot.helper.ext_utils.help_messages import (
@@ -302,18 +303,22 @@ async def _mirror_leech(
     path = f"{DOWNLOAD_DIR}{message.id}{folder_name}"
 
     if len(text) > 1 and text[1].startswith("Tag: "):
-        tag, id_ = text[1].split("Tag: ")[1].split()
-        message.from_user = await client.get_users(id_)
+        message.from_user = await get_tagged_user(client, text[1], message.from_user)
         try:
             await message.unpin()
         except Exception:
             pass
     elif sender_chat := message.sender_chat:
         tag = sender_chat.title
-    if username := message.from_user.username:
-        tag = f"@{username}"
+    if message.from_user:
+        if username := message.from_user.username:
+            tag = f"@{username}"
+        elif hasattr(message.from_user, "mention"):
+            tag = message.from_user.mention
+        else:
+            tag = str(message.from_user.id)
     else:
-        tag = message.from_user.mention
+        tag = ""
 
     decrypter = None
     if not link and (reply_to := message.reply_to_message):

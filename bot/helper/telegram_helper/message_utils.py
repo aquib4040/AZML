@@ -749,3 +749,49 @@ async def check_botpm(message, button=None):
             "Start Bot Now", f"https://t.me/{bot_name}?start=start", "header"
         )
         return _msg, button
+
+
+class CustomUser:
+    def __init__(self, uid, uname, fname, m):
+        self.id = uid
+        self.username = uname
+        self.first_name = fname
+        self.last_name = ""
+        self.mention = m
+        self.is_bot = False
+
+
+async def get_tagged_user(client, text_line, fallback_user=None):
+    try:
+        parts = text_line.split("Tag: ", 1)[1].split()
+        tag = parts[0] if len(parts) > 0 else ""
+        id_ = parts[1] if len(parts) > 1 else ""
+        if not id_ and tag.lstrip("-").isdigit():
+            id_ = tag
+            tag = ""
+        user = None
+        if tag and tag.startswith("@"):
+            try:
+                user = await client.get_users(tag)
+            except Exception:
+                pass
+        if not user and id_ and id_.lstrip("-").isdigit():
+            try:
+                user = await client.get_users(int(id_))
+            except Exception:
+                pass
+        if not user and id_:
+            try:
+                user = await client.get_users(id_)
+            except Exception:
+                pass
+        if user:
+            return user
+        user_id = int(id_) if id_ and id_.lstrip("-").isdigit() else (fallback_user.id if fallback_user else 0)
+        clean_name = tag.lstrip("@") if tag else str(user_id)
+        username = clean_name if tag.startswith("@") else None
+        mention = tag if tag.startswith("@") else f'<a href="tg://user?id={user_id}">{clean_name}</a>'
+        return CustomUser(user_id, username, clean_name, mention)
+    except Exception as e:
+        LOGGER.error(f"Failed to resolve tagged user: {e}")
+        return fallback_user

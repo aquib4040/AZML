@@ -12,6 +12,7 @@ from threading import Thread
 from time import sleep, time
 from subprocess import Popen, run as srun
 from os import remove as osremove, path as ospath, environ, getcwd
+import re
 from glob import glob
 from aria2p import API as ariaAPI, Client as ariaClient
 from qbittorrentapi import Client as qbClient
@@ -841,7 +842,8 @@ Popen(
     shell=True,
 )
 
-if not BASE_URL or "trycloudflare.com" in BASE_URL:
+is_ip_url = bool(re.search(r"https?://(?:\d{1,3}\.){3}\d{1,3}", BASE_URL))
+if not BASE_URL or "trycloudflare.com" in BASE_URL or is_ip_url:
     cf_url = start_cloudflared_tunnel(BASE_URL_PORT)
     if cf_url:
         BASE_URL = cf_url

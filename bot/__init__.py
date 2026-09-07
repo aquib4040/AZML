@@ -954,7 +954,19 @@ bot = wztgClient(
     workers=1000,
     parse_mode=enums.ParseMode.HTML,
     in_memory=True,
-).start()
+)
+while True:
+    try:
+        bot.start()
+        break
+    except Exception as e:
+        if "FloodWait" in str(type(e)):
+            wait_time = getattr(e, "value", 1800)
+            log_warning(f"FloodWait encountered: sleeping for {wait_time}s before retrying bot.start()...")
+            from time import sleep as tsleep
+            tsleep(wait_time)
+        else:
+            raise e
 bot_loop = bot.loop
 bot_name = bot.me.username
 scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)

@@ -153,6 +153,37 @@ class DbManger:
         await self.__db.users[bot_id].replace_one({"_id": user_id}, data, upsert=True)
         self.__conn.close
 
+    async def get_user_data(self, user_id):
+        if self.__err:
+            return {}
+        try:
+            uid = int(user_id)
+        except Exception:
+            uid = user_id
+        row = await self.__db.users[bot_id].find_one({"_id": uid})
+        if not row and uid != user_id:
+            row = await self.__db.users[bot_id].find_one({"_id": user_id})
+        self.__conn.close
+        if row:
+            del row["_id"]
+            thumb_path = f"Thumbnails/{user_id}.jpg"
+            rclone_path = f"rclone/{user_id}.conf"
+            if row.get("thumb"):
+                if not await aiopath.exists("Thumbnails"):
+                    await makedirs("Thumbnails")
+                async with aiopen(thumb_path, "wb+") as f:
+                    await f.write(row["thumb"])
+                row["thumb"] = thumb_path
+            if row.get("rclone"):
+                if not await aiopath.exists("rclone"):
+                    await makedirs("rclone")
+                async with aiopen(rclone_path, "wb+") as f:
+                    await f.write(row["rclone"])
+                row["rclone"] = rclone_path
+            user_data[user_id] = row
+            return row
+        return {}
+
     async def update_user_doc(self, user_id, key, path=""):
         if self.__err:
             return

@@ -4,7 +4,7 @@ from asyncio import sleep
 from aiofiles.os import remove as aioremove
 from random import choice as rchoice
 from time import time
-from re import match as re_match
+from re import match as re_match, search as re_search, sub as re_sub
 from cryptography.fernet import InvalidToken
 
 from pyrogram import Client
@@ -751,47 +751,141 @@ async def check_botpm(message, button=None):
         return _msg, button
 
 
+class MentionStr(str):
+    def __call__(self, *args, **kwargs):
+        return str(self)
+
+
 class CustomUser:
-    def __init__(self, uid, uname, fname, m):
+    def __init__(self, uid, uname, fname, m, client=None):
         self.id = uid
         self.username = uname
         self.first_name = fname
         self.last_name = ""
-        self.mention = m
+        self.mention = m if isinstance(m, MentionStr) else MentionStr(m)
         self.is_bot = False
+        self._client = client
 
 
-async def get_tagged_user(client, text_line, fallback_user=None):
+def parse_tag_info(text, bot_uname=None):
+    if not text:
+        return "", "", ""
+    tag = ""
+    id_ = ""
+    cleaned = text
+    bot_n = (bot_uname or bot_name or "").lower()
+
+    # Case 1: Explicit 'Tag:' (case insensitive)
+    # Matches 'Tag: @user 123', 'Tag:@user 123', 'Tag: 123', 'Tag: @user', etc.
+    m = re_search(r"(?i)(?:^|[\s\n])tag:\s*([^\s\n]+)(?:\s+(-?\d+))?", text)
+    if m:
+        first = m.group(1).strip()
+        second = m.group(2).strip() if m.group(2) else ""
+        cleaned = text[: m.start()] + text[m.end() :]
+        if first.startswith("@"):
+            tag = first
+            id_ = second
+        elif first.lstrip("-").isdigit():
+            id_ = first
+            tag = ""
+        else:
+            tag = first
+            id_ = second
+        return tag, id_, cleaned.strip()
+
+    # Case 2: Multi-line where line 2 is @user [id] or just id
+    lines = [l.strip() for l in text.split("\n") if l.strip()]
+    if len(lines) > 1:
+        line2 = lines[1]
+        m2 = re_match(r"^(@[A-Za-z0-9_]+)(?:\s+(-?\d+))?$", line2)
+        if m2 and (not bot_n or m2.group(1).lstrip("@").lower() != bot_n):
+            tag = m2.group(1)
+            id_ = m2.group(2) or ""
+            cleaned = "\n".join([lines[0]] + lines[2:])
+            return tag, id_, cleaned.strip()
+        m_id = re_match(r"^(-?\d{6,14})$", line2)
+        if m_id:
+            id_ = m_id.group(1)
+            cleaned = "\n".join([lines[0]] + lines[2:])
+            return tag, id_, cleaned.strip()
+
+    # Case 3: Inline @username [id]
+    m3 = re_search(r"(?:^|\s)(@[A-Za-z0-9_]+)(?:\s+(-?\d{6,14}))?(?:\s|$)", text)
+    if m3 and (not bot_n or m3.group(1).lstrip("@").lower() != bot_n):
+        prefix = text[: m3.start()].strip()
+        if not prefix.endswith(("-u", "-user")):
+            tag = m3.group(1)
+            id_ = m3.group(2) or ""
+            cleaned = text[: m3.start()] + " " + text[m3.end() :]
+            return tag, id_, re_sub(r"\s+", " ", cleaned).strip()
+
+    # Case 4: Pure numeric ID at end of command (e.g. /lx 7995560265 or /lx <link> 7995560265)
+    m4 = re_search(r"(?:^|\s)(-?\d{6,14})(?:\s|$)", text)
+    if m4:
+        prefix = text[: m4.start()].strip()
+        flags = ("-i", "-ss", "-screenshots", "-ud", "-dump", "-c", "-category", "-id")
+        if not any(prefix.endswith(f) for f in flags):
+            id_ = m4.group(1)
+            cleaned = text[: m4.start()] + " " + text[m4.end() :]
+            return tag, id_, re_sub(r"\s+", " ", cleaned).strip()
+
+    return tag, id_, cleaned.strip()
+
+
+async def get_tagged_user(client, tag="", id_="", fallback_user=None):
     try:
-        parts = text_line.split("Tag: ", 1)[1].split()
-        tag = parts[0] if len(parts) > 0 else ""
-        id_ = parts[1] if len(parts) > 1 else ""
-        if not id_ and tag.lstrip("-").isdigit():
+        if fallback_user is None and not isinstance(id_, (int, str)):
+            fallback_user = id_
+            id_ = ""
+        if tag and (tag.startswith("Tag: ") or "tag:" in tag.lower() or "\n" in tag):
+            t, i, _ = parse_tag_info(tag, bot_name)
+            if t or i:
+                tag, id_ = t, i
+
+        if not id_ and tag and tag.lstrip("-").isdigit():
             id_ = tag
             tag = ""
+
+        user_id = int(id_) if id_ and str(id_).lstrip("-").isdigit() else None
         user = None
-        if tag and tag.startswith("@"):
+
+        if user_id:
+            try:
+                user = await client.get_users(user_id)
+            except Exception:
+                pass
+
+        if not user and tag and tag.startswith("@"):
             try:
                 user = await client.get_users(tag)
+                if user:
+                    user_id = user.id
             except Exception:
                 pass
-        if not user and id_ and id_.lstrip("-").isdigit():
-            try:
-                user = await client.get_users(int(id_))
-            except Exception:
-                pass
-        if not user and id_:
-            try:
-                user = await client.get_users(id_)
-            except Exception:
-                pass
+
         if user:
-            return user
-        user_id = int(id_) if id_ and id_.lstrip("-").isdigit() else (fallback_user.id if fallback_user else 0)
-        clean_name = tag.lstrip("@") if tag else str(user_id)
-        username = clean_name if tag.startswith("@") else None
-        mention = tag if tag.startswith("@") else f'<a href="tg://user?id={user_id}">{clean_name}</a>'
-        return CustomUser(user_id, username, clean_name, mention)
+            user_id = user.id
+            user._client = client
+        elif user_id or tag:
+            user_id = user_id or (fallback_user.id if fallback_user else 0)
+            clean_name = tag.lstrip("@") if tag else str(user_id)
+            username = clean_name if tag.startswith("@") else None
+            mention_text = tag if tag.startswith("@") else f'<a href="tg://user?id={user_id}">{clean_name}</a>'
+            user = CustomUser(user_id, username, clean_name, MentionStr(mention_text), client)
+        else:
+            return fallback_user
+
+        if user_id:
+            try:
+                from bot.helper.ext_utils.db_handler import DbManger
+                db_data = await DbManger().get_user_data(user_id)
+                if db_data:
+                    LOGGER.info(f"Loaded user settings from DB for tagged user {user_id}")
+            except Exception as ex:
+                LOGGER.error(f"Error loading user_data for {user_id}: {ex}")
+            user_data.setdefault(user_id, {})
+
+        return user
     except Exception as e:
         LOGGER.error(f"Failed to resolve tagged user: {e}")
         return fallback_user

@@ -17,6 +17,7 @@ from bot import (
     bot_name,
     categories_dict,
     user_data,
+    OWNER_ID,
 )
 from bot.helper.mirror_utils.download_utils.direct_downloader import add_direct_download
 from bot.helper.ext_utils.bot_utils import (
@@ -64,6 +65,7 @@ from bot.helper.telegram_helper.message_utils import (
     open_category_btns,
     open_dump_btns,
     get_tagged_user,
+    parse_tag_info,
 )
 from bot.helper.listeners.tasks_listener import MirrorLeechListener
 from bot.helper.ext_utils.help_messages import (
@@ -127,6 +129,25 @@ async def open_stream_btns(message):
 async def _mirror_leech(
     client, message, isQbit=False, isLeech=False, sameDir=None, bulk=[]
 ):
+    raw_text = message.text or message.caption or ""
+    tag_str, id_str, cleaned_text = parse_tag_info(raw_text, bot_name)
+    sender_user = message.from_user
+    sender_is_sudo = bool(
+        sender_user
+        and (
+            sender_user.id == OWNER_ID
+            or user_data.get(sender_user.id, {}).get("is_sudo")
+        )
+    )
+    if tag_str or id_str:
+        message.from_user = await get_tagged_user(
+            client, tag_str, id_str, message.from_user
+        )
+        try:
+            await message.unpin()
+        except Exception:
+            pass
+    message.text = cleaned_text
     text = message.text.split("\n")
     input_list = text[0].split(" ")
 
@@ -302,19 +323,13 @@ async def _mirror_leech(
 
     path = f"{DOWNLOAD_DIR}{message.id}{folder_name}"
 
-    if len(text) > 1 and text[1].startswith("Tag: "):
-        message.from_user = await get_tagged_user(client, text[1], message.from_user)
-        try:
-            await message.unpin()
-        except Exception:
-            pass
-    elif sender_chat := message.sender_chat:
+    if sender_chat := message.sender_chat:
         tag = sender_chat.title
-    if message.from_user:
+    elif message.from_user:
         if username := message.from_user.username:
             tag = f"@{username}"
         elif hasattr(message.from_user, "mention"):
-            tag = message.from_user.mention
+            tag = str(message.from_user.mention)
         else:
             tag = str(message.from_user.id)
     else:
@@ -384,9 +399,10 @@ async def _mirror_leech(
 
     error_msg = []
     error_button = None
-    task_utilis_msg, error_button = await task_utils(message)
-    if task_utilis_msg:
-        error_msg.extend(task_utilis_msg)
+    if not sender_is_sudo:
+        task_utilis_msg, error_button = await task_utils(message)
+        if task_utilis_msg:
+            error_msg.extend(task_utilis_msg)
 
     if error_msg:
         final_msg = f"<b><i>User:</i> {tag}</b>,\n"

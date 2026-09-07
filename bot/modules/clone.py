@@ -14,6 +14,9 @@ from bot import (
     categories_dict,
     config_dict,
     bot,
+    bot_name,
+    user_data,
+    OWNER_ID,
 )
 from bot.helper.ext_utils.task_manager import limit_checker, task_utils
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
@@ -25,6 +28,8 @@ from bot.helper.telegram_helper.message_utils import (
     delete_links,
     auto_delete_message,
     open_category_btns,
+    get_tagged_user,
+    parse_tag_info,
 )
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -287,6 +292,25 @@ async def gdcloneNode(message, link, listen_up):
 
 @new_task
 async def clone(client, message):
+    raw_text = message.text or message.caption or ""
+    tag_str, id_str, cleaned_text = parse_tag_info(raw_text, bot_name)
+    sender_user = message.from_user
+    sender_is_sudo = bool(
+        sender_user
+        and (
+            sender_user.id == OWNER_ID
+            or user_data.get(sender_user.id, {}).get("is_sudo")
+        )
+    )
+    if tag_str or id_str:
+        message.from_user = await get_tagged_user(
+            client, tag_str, id_str, message.from_user
+        )
+        try:
+            await message.unpin()
+        except Exception:
+            pass
+    message.text = cleaned_text
     input_list = message.text.split(" ")
 
     arg_base = {
@@ -317,8 +341,10 @@ async def clone(client, message):
 
     if username := message.from_user.username:
         tag = f"@{username}"
+    elif hasattr(message.from_user, "mention"):
+        tag = str(message.from_user.mention)
     else:
-        tag = message.from_user.mention
+        tag = str(message.from_user.id)
 
     if not link and (reply_to := message.reply_to_message) and reply_to.text:
         link = reply_to.text.split("\n", 1)[0].strip()
@@ -357,9 +383,10 @@ async def clone(client, message):
 
     error_msg = []
     error_button = None
-    task_utilis_msg, error_button = await task_utils(message)
-    if task_utilis_msg:
-        error_msg.extend(task_utilis_msg)
+    if not sender_is_sudo:
+        task_utilis_msg, error_button = await task_utils(message)
+        if task_utilis_msg:
+            error_msg.extend(task_utilis_msg)
 
     if error_msg:
         final_msg = f"<i>User :</i> <b>{tag}</b>\n"

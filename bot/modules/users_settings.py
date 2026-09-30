@@ -182,6 +182,10 @@ desp_dict = {
         "Subtitle Stream Title metadata tag for video files.",
         "Send Subtitle Title text for metadata.\n<b>Timeout:</b> 60 sec",
     ],
+    "meta_site": [
+        "Official Site / Website metadata tag for video and media files.",
+        "Send Official Site / Website URL or Text.\n<b>Timeout:</b> 60 sec",
+    ],
     "ffmpeg_cmds": [
         "Custom FFmpeg Commands to process files before upload. Dict of list values for different profiles.",
         'Send FFmpeg Commands as JSON Dict.\n<b>Example:</b>\n<code>{"keep_japanese": ["-i mltb.video -map 0:v:0 -map 0:a:m:language:jpn -map 0:s:m:language:eng? -c copy mltb.mkv -del"]}</code>\n\n<b>Notes:</b>\n- <code>mltb.video</code> = all video files, <code>mltb.mkv</code> = output as mkv\n- <code>-del</code> = delete original after processing\n- <b>Re-encoding is blocked by default</b> to prevent server abuse (must use <code>-c copy</code> or stream dropping)\n- Use <code>-ff key_name</code> in commands to execute\n<b>Timeout:</b> 60 sec',
@@ -213,6 +217,7 @@ fname_dict = {
     "meta_year": "Year",
     "meta_audio": "Audio Title",
     "meta_subtitle": "Subtitle Title",
+    "meta_site": "Official Site",
     "mprefix": "Prefix",
     "msuffix": "Suffix",
     "mremname": "Remname",
@@ -613,6 +618,7 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
         year_val = meta_dict.get("year", "")
         audio_val = meta_dict.get("audio", "")
         sub_val = meta_dict.get("subtitle", "")
+        site_val = meta_dict.get("site", "") or meta_dict.get("website", "") or meta_dict.get("official_site", "")
 
         text = BotTheme(
             "METADATA",
@@ -625,6 +631,7 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             YEAR=escape(year_val) if year_val else (escape(all_val) + " (Default)" if all_val else "Not Set"),
             AUDIO=escape(audio_val) if audio_val else (escape(all_val) + " (Default)" if all_val else "Not Set"),
             SUBTITLE=escape(sub_val) if sub_val else (escape(all_val) + " (Default)" if all_val else "Not Set"),
+            SITE=escape(site_val) if site_val else (escape(all_val) + " (Default)" if all_val else "Not Set"),
         )
         text += "\n\n➲ <b>Description :</b> <i>Configure custom video and media metadata tags. Use <b>Change All</b> to set all fields at once, or configure each field individually.</i>"
 
@@ -660,8 +667,12 @@ async def get_user_settings(from_user, key=None, edit_type=None, edit_mode=None)
             f"{'✅️' if sub_val else ''} Subtitle Title",
             f"userset {user_id} meta_subtitle",
         )
+        buttons.ibutton(
+            f"{'✅️' if site_val else ''} Official Site",
+            f"userset {user_id} meta_site",
+        )
 
-        has_any = any([all_val, title_val, desc_val, artist_val, album_val, year_val, audio_val, sub_val])
+        has_any = any([all_val, title_val, desc_val, artist_val, album_val, year_val, audio_val, sub_val, site_val])
         if has_any:
             buttons.ibutton("🗑️ Reset All", f"userset {user_id} reset_metadata", "footer")
 
@@ -1077,6 +1088,7 @@ async def user_settings(client, message):
                     "meta_year",
                     "meta_audio",
                     "meta_subtitle",
+                    "meta_site",
                     "intro_text",
                     "intro_duration",
                     "intro_fontsize",
@@ -1117,6 +1129,8 @@ async def user_settings(client, message):
     /cmd -s meta_audio
 ➲ <b>Subtitle Title Metadata :</b>
     /cmd -s meta_subtitle
+➲ <b>Official Site Metadata :</b>
+    /cmd -s meta_site
 ➲ <b>YT-DLP Options :</b>
     /cmd -s yt_opt
 ➲ <b>Leech User Dump :</b>

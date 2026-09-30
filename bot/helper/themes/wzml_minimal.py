@@ -319,5 +319,6 @@ class WZMLStyle:
 ┠ <b>Album :</b> <code>{ALBUM}</code>
 ┠ <b>Year :</b> <code>{YEAR}</code>
 ┠ <b>Audio Title :</b> <code>{AUDIO}</code>
-┖ <b>Subtitle Title :</b> <code>{SUBTITLE}</code>"""
+┠ <b>Subtitle Title :</b> <code>{SUBTITLE}</code>
+┖ <b>Official Site :</b> <code>{SITE}</code>"""
 

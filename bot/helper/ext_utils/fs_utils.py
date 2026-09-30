@@ -274,6 +274,7 @@ async def edit_metadata(
         year = metadata.get("year") or all_val
         audio = metadata.get("audio") or all_val
         subtitle = metadata.get("subtitle") or all_val
+        site = metadata.get("site") or metadata.get("website") or metadata.get("official_site") or all_val
     elif isinstance(metadata, str):
         all_val = metadata
         title = all_val
@@ -283,8 +284,9 @@ async def edit_metadata(
         year = all_val
         audio = all_val
         subtitle = all_val
+        site = all_val
     else:
-        title = description = artist = album = year = audio = subtitle = ""
+        title = description = artist = album = year = audio = subtitle = site = ""
 
     intro_enabled = intro_settings.get("enabled", True)
     wants_intro = intro_settings.get("text") and intro_enabled
@@ -391,12 +393,35 @@ async def edit_metadata(
         for tag in year_tags:
             meta_args.extend(["-metadata", f"{tag}=", "-metadata:s", f"{tag}="])
 
+    # Official Site / Website / URL / Channel (sets container + all streams)
+    site_tags = [
+        "official_site", "Official_Site", "OFFICIAL_SITE", "Official_site",
+        "official-site", "Official-Site", "OFFICIAL-SITE",
+        "official site", "Official Site", "OFFICIAL SITE",
+        "website", "Website", "WEBSITE",
+        "url", "Url", "URL",
+        "purl", "Purl", "PURL",
+        "homepage", "Homepage", "HOMEPAGE",
+        "official_audio_source_url", "Official_Audio_Source_Url", "OFFICIAL_AUDIO_SOURCE_URL",
+        "official_artist_site", "Official_Artist_Site", "OFFICIAL_ARTIST_SITE",
+        "official_release_site", "Official_Release_Site", "OFFICIAL_RELEASE_SITE",
+        "official_source_url", "Official_Source_Url", "OFFICIAL_SOURCE_URL",
+        "source_url", "Source_Url", "SOURCE_URL",
+        "encoder_url", "Encoder_Url", "ENCODER_URL",
+        "channel", "Channel", "CHANNEL",
+        "channel_url", "Channel_Url", "CHANNEL_URL",
+        "contact", "Contact", "CONTACT",
+    ]
+    if site:
+        for tag in site_tags:
+            meta_args.extend(["-metadata", f"{tag}={site}", "-metadata:s", f"{tag}={site}"])
+    else:
+        for tag in site_tags:
+            meta_args.extend(["-metadata", f"{tag}=", "-metadata:s", f"{tag}="])
+
     # Clear other generic junk metadata from container and all streams
     junk_tags = [
         "copyright", "Copyright", "COPYRIGHT",
-        "purl", "PURL",
-        "website", "Website", "WEBSITE",
-        "url", "URL",
         "publisher", "Publisher", "PUBLISHER",
         "license", "License", "LICENSE",
         "law_rating", "LAW_RATING",

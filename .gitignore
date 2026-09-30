@@ -23,3 +23,4 @@ bot.session
 user.session
 terabox.txt
 rclone.conf
+.requirements_installed

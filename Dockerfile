@@ -4,11 +4,6 @@ WORKDIR /usr/src/app
 
 # Install official standalone uv binaries so subprocess and shell can always use uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-RUN chmod +x /bin/uv /bin/uvx \
-    && ln -sf /bin/uv /usr/local/bin/uv \
-    && ln -sf /bin/uv /usr/bin/uv \
-    && ln -sf /bin/uvx /usr/local/bin/uvx \
-    && ln -sf /bin/uvx /usr/bin/uvx
 
 # Ensure uv is in PATH
 ENV PATH="/bin:/usr/local/bin:$PATH"

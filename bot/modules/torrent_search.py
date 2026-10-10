@@ -246,7 +246,9 @@ async def torrentSearch(_, message):
     buttons = ButtonMaker()
     key = message.text.split() if message.text else ["/cmd"]
     SEARCH_PLUGINS = config_dict["SEARCH_PLUGINS"]
-    msg, btn = await checking_access(user_id)
+    msg, btn = await checking_access(
+        user_id, is_group=(message.chat.type != message.chat.type.PRIVATE)
+    )
     if msg is not None:
         await sendMessage(message, msg, btn.build_menu(1))
         return

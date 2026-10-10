@@ -4,7 +4,7 @@ from sys import executable
 from os import execl as osexecl
 from asyncio import create_subprocess_exec, gather, run as asyrun
 from uuid import uuid4
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from importlib import import_module, reload
 
 from requests import get as rget
@@ -58,6 +58,7 @@ from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.button_build import ButtonMaker
 from .helper.listeners.aria2_listener import start_aria2_listener
 from .helper.themes import BotTheme
+from .helper.ext_utils.shortners import short_url
 from .modules import (
     authorize,
     clone,
@@ -107,7 +108,51 @@ async def start(client, message):
     reply_markup = buttons.build_menu(2)
     if len(message.command) > 1 and message.command[1] == "wzmlx":
         await deleteMessage(message)
-    elif len(message.command) > 1 and config_dict["TOKEN_TIMEOUT"]:
+    elif len(message.command) > 1 and (
+        message.command[1].startswith("req_") or message.command[1] == "token"
+    ):
+        userid = message.from_user.id
+        if message.command[1].startswith("req_"):
+            target_uid = message.command[1].split("_", 1)[1]
+            if not target_uid.isdigit() or int(target_uid) != userid:
+                return await sendMessage(message, BotTheme("OWN_TOKEN_GENERATE"))
+        if not config_dict.get("SHORTENER_ENABLED", True) or not config_dict.get("TOKEN_TIMEOUT"):
+            return await sendMessage(message, "<i>Token verification is currently disabled!</i>")
+        user_data.setdefault(userid, {})
+        data = user_data[userid]
+        expire = data.get("time")
+        isExpired = (
+            expire is None
+            or expire is not None
+            and (time() - expire) > config_dict["TOKEN_TIMEOUT"]
+        )
+        if not isExpired:
+            return await sendMessage(
+                message,
+                f"<i>Your token is already active!</i>\n<b>Remaining Time:</b> <code>{get_readable_time(config_dict['TOKEN_TIMEOUT'] - (time() - expire))}</code>",
+            )
+        token = data["token"] if expire is None and "token" in data else str(uuid4())
+        if expire is not None:
+            del data["time"]
+        data["token"] = token
+        user_data[userid].update(data)
+        encrypt_url = b64encode(f"{token}&&{userid}".encode()).decode()
+        token_buttons = ButtonMaker()
+        token_buttons.ubutton(
+            "Generate New Token",
+            short_url(f"https://t.me/{bot_name}?start={encrypt_url}"),
+        )
+        msg = (
+            "<i>Temporary Token generation link is ready!</i>\n"
+            "Kindly open the link below and complete verification to start using the bot.\n\n"
+            f"<b>Validity :</b> <code>{get_readable_time(config_dict['TOKEN_TIMEOUT'])}</code>"
+        )
+        return await sendMessage(message, msg, token_buttons.build_menu(1))
+    elif (
+        len(message.command) > 1
+        and config_dict.get("SHORTENER_ENABLED", True)
+        and config_dict.get("TOKEN_TIMEOUT")
+    ):
         userid = message.from_user.id
         encrypted_url = message.command[1]
         input_token, pre_uid = (b64decode(encrypted_url.encode()).decode()).split("&&")

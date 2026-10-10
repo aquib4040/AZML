@@ -261,7 +261,9 @@ async def task_utils(message):
     if await CustomFilters.sudo("", message):
         return msg, button
     user_id = message.from_user.id
-    token_msg, button = await checking_access(user_id, button)
+    token_msg, button = await checking_access(
+        user_id, button, is_group=(message.chat.type != message.chat.type.PRIVATE)
+    )
     if token_msg is not None:
         msg.append(token_msg)
     if message.chat.type != message.chat.type.BOT:

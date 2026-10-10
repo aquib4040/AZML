@@ -46,7 +46,7 @@ from bot.helper.telegram_helper.message_utils import (
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.bot_utils import setInterval, sync_to_async, new_thread
+from bot.helper.ext_utils.bot_utils import setInterval, sync_to_async, new_thread, get_readable_time
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.task_manager import start_from_queued
 from bot.helper.ext_utils.help_messages import default_desp
@@ -564,6 +564,26 @@ async def load_config():
     TOKEN_TIMEOUT = environ.get("TOKEN_TIMEOUT", "")
     TOKEN_TIMEOUT = int(TOKEN_TIMEOUT) if TOKEN_TIMEOUT.isdigit() else ""
 
+    SHORTENER = environ.get("SHORTENER", "")
+    if len(SHORTENER) == 0:
+        SHORTENER = config_dict.get("SHORTENER", "")
+
+    SHORTENER_API = environ.get("SHORTENER_API", "")
+    if len(SHORTENER_API) == 0:
+        SHORTENER_API = config_dict.get("SHORTENER_API", "")
+
+    SHORTENER_ENABLED = environ.get("SHORTENER_ENABLED", "")
+    if len(SHORTENER_ENABLED) == 0:
+        SHORTENER_ENABLED = config_dict.get("SHORTENER_ENABLED", True)
+    else:
+        SHORTENER_ENABLED = SHORTENER_ENABLED.lower() == "true"
+
+    TOKEN_IN_PM = environ.get("TOKEN_IN_PM", "")
+    if len(TOKEN_IN_PM) == 0:
+        TOKEN_IN_PM = config_dict.get("TOKEN_IN_PM", True)
+    else:
+        TOKEN_IN_PM = TOKEN_IN_PM.lower() == "true"
+
     LOGIN_PASS = environ.get("LOGIN_PASS", "")
     if len(LOGIN_PASS) == 0:
         LOGIN_PASS = None
@@ -762,6 +782,10 @@ async def load_config():
             "LEECH_SPLIT_SIZE": LEECH_SPLIT_SIZE,
             "LOGIN_PASS": LOGIN_PASS,
             "TOKEN_TIMEOUT": TOKEN_TIMEOUT,
+            "SHORTENER": SHORTENER,
+            "SHORTENER_API": SHORTENER_API,
+            "SHORTENER_ENABLED": SHORTENER_ENABLED,
+            "TOKEN_IN_PM": TOKEN_IN_PM,
             "MEDIA_GROUP": MEDIA_GROUP,
             "MEGA_EMAIL": MEGA_EMAIL,
             "MEGA_PASSWORD": MEGA_PASSWORD,
@@ -829,16 +853,27 @@ async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
         buttons.ibutton("Private Files", "botset private")
         buttons.ibutton("Qbit Settings", "botset qbit")
         buttons.ibutton("Aria2c Settings", "botset aria")
+        buttons.ibutton("Shortener", "botset shortener")
         buttons.ibutton("Close", "botset close")
         msg = "<b><i>Bot Settings:</i></b>"
     elif key == "var":
-        for k in list(OrderedDict(sorted(config_dict.items())).keys())[
-            START : 10 + START
-        ]:
+        filtered_vars = [
+            k
+            for k in sorted(config_dict.keys())
+            if k
+            not in [
+                "TOKEN_TIMEOUT",
+                "SHORTENER",
+                "SHORTENER_API",
+                "SHORTENER_ENABLED",
+                "TOKEN_IN_PM",
+            ]
+        ]
+        for k in filtered_vars[START : 10 + START]:
             buttons.ibutton(k, f"botset editvar {k}")
         buttons.ibutton("Back", "botset back")
         buttons.ibutton("Close", "botset close")
-        for x in range(0, len(config_dict) - 1, 10):
+        for x in range(0, len(filtered_vars), 10):
             buttons.ibutton(
                 f"{int(x/10)+1}", f"botset start var {x}", position="footer"
             )
@@ -940,6 +975,47 @@ async def get_buttons(key=None, edit_type=None, edit_mode=None, mess=None):
         buttons.ibutton("Empty String", f"botset emptyqbit {key}")
         buttons.ibutton("Close", "botset close")
         msg = f"Send a valid value for {key}. Timeout: 60 sec"
+    elif key == "shortener":
+        s_domain = config_dict.get("SHORTENER", "") or "Not Set"
+        s_api = config_dict.get("SHORTENER_API", "") or "Not Set"
+        s_timeout = config_dict.get("TOKEN_TIMEOUT", "")
+        s_timeout_str = (
+            get_readable_time(int(s_timeout))
+            if str(s_timeout).isdigit() and int(s_timeout) > 0
+            else "Disabled"
+        )
+        is_enabled = config_dict.get("SHORTENER_ENABLED", True)
+        s_status = "Enabled ✅" if is_enabled else "Disabled ❌"
+        is_pm = config_dict.get("TOKEN_IN_PM", True)
+        s_pm_str = "Enabled ✅" if is_pm else "Disabled ❌"
+
+        msg = (
+            "<b><i>Shortener Settings:</i></b>\n\n"
+            f"<b>• Shortener:</b> <code>{s_domain}</code>\n"
+            f"<b>• Shortener API:</b> <code>{s_api}</code>\n"
+            f"<b>• Verify Timeout:</b> <code>{s_timeout_str}</code>\n"
+            f"<b>• Token via DM:</b> <b>{s_pm_str}</b>\n"
+            f"<b>• Status:</b> <b>{s_status}</b>"
+        )
+        buttons.ibutton("Shortener", "botset editshortener domain")
+        buttons.ibutton("API Key", "botset editshortener api_key")
+        buttons.ibutton("Verify Timeout", "botset editshortener timeout")
+        buttons.ibutton(f"Token in DM: {'ON' if is_pm else 'OFF'}", "botset toggleshortener pm")
+        if is_enabled:
+            buttons.ibutton("Disable", "botset toggleshortener off")
+        else:
+            buttons.ibutton("Enable", "botset toggleshortener on")
+        buttons.ibutton("Back", "botset back")
+        buttons.ibutton("Close", "botset close")
+    elif edit_type == "editshortener":
+        buttons.ibutton("Back", "botset shortener")
+        buttons.ibutton("Close", "botset close")
+        if key == "domain":
+            msg = "<i>Send Shortener domain (e.g. <code>arolinks.com</code>).</i>\n\n<b>Timeout:</b> 60 sec"
+        elif key == "api_key":
+            msg = "<i>Send Shortener API Key.</i>\n\n<b>Timeout:</b> 60 sec"
+        elif key == "timeout":
+            msg = "<i>Send Token Verification Timeout in seconds (e.g. <code>21600</code>). Send 0 to disable.</i>\n\n<b>Timeout:</b> 60 sec"
     button = buttons.build_menu(1) if key is None else buttons.build_menu(2)
     return msg, button
 
@@ -1089,6 +1165,27 @@ async def edit_qbit(_, message, pre_message, key):
     await deleteMessage(message)
     if DATABASE_URL:
         await DbManger().update_qbittorrent(key, value)
+
+
+async def edit_shortener_setting(_, message, pre_message, key):
+    handler_dict[message.chat.id] = False
+    value = message.text.strip()
+    if key == "domain":
+        value = value.replace("https://", "").replace("http://", "").rstrip("/")
+        config_dict["SHORTENER"] = value
+        if DATABASE_URL:
+            await DbManger().update_config({"SHORTENER": value})
+    elif key == "api_key":
+        config_dict["SHORTENER_API"] = value
+        if DATABASE_URL:
+            await DbManger().update_config({"SHORTENER_API": value})
+    elif key == "timeout":
+        value = int(value) if value.isdigit() else ""
+        config_dict["TOKEN_TIMEOUT"] = value
+        if DATABASE_URL:
+            await DbManger().update_config({"TOKEN_TIMEOUT": value})
+    await update_buttons(pre_message, "shortener")
+    await deleteMessage(message)
 
 
 async def update_private_file(_, message, pre_message):
@@ -1270,7 +1367,7 @@ async def edit_bot_settings(client, query):
         if key is None:
             globals()["START"] = 0
         await update_buttons(message, key)
-    elif data[1] in ["var", "aria", "qbit"]:
+    elif data[1] in ["var", "aria", "qbit", "shortener"]:
         await query.answer()
         await update_buttons(message, data[1])
     elif data[1] == "resetvar":
@@ -1473,6 +1570,28 @@ async def edit_bot_settings(client, query):
         if START != int(data[3]):
             globals()["START"] = int(data[3])
             await update_buttons(message, data[2])
+    elif data[1] == "toggleshortener":
+        handler_dict[message.chat.id] = False
+        if data[2] == "pm":
+            value = not config_dict.get("TOKEN_IN_PM", True)
+            config_dict["TOKEN_IN_PM"] = value
+            if DATABASE_URL:
+                await DbManger().update_config({"TOKEN_IN_PM": value})
+            await query.answer(f"Token via DM {'Enabled' if value else 'Disabled'}!", show_alert=True)
+        else:
+            value = data[2] == "on"
+            config_dict["SHORTENER_ENABLED"] = value
+            if DATABASE_URL:
+                await DbManger().update_config({"SHORTENER_ENABLED": value})
+            await query.answer(f"Shortener {'Enabled' if value else 'Disabled'}!", show_alert=True)
+        await update_buttons(message, "shortener")
+    elif data[1] == "editshortener":
+        handler_dict[message.chat.id] = False
+        await query.answer()
+        await update_buttons(message, data[2], data[1])
+        pfunc = partial(edit_shortener_setting, pre_message=message, key=data[2])
+        rfunc = partial(update_buttons, message, "shortener")
+        await event_handler(client, query, pfunc, rfunc)
     elif data[1] == "push":
         await query.answer()
         filename = data[2].rsplit(".zip", 1)[0]

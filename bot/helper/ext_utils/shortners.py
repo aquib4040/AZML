@@ -6,18 +6,25 @@ from urllib.parse import quote
 from cloudscraper import create_scraper
 from urllib3 import disable_warnings
 
-from bot import LOGGER, shorteners_list
+from bot import LOGGER, shorteners_list, config_dict
 
 
 def short_url(longurl, attempt=0):
-    if not shorteners_list:
+    if not config_dict.get("SHORTENER_ENABLED", True):
+        return longurl
+    if not shorteners_list and not (config_dict.get("SHORTENER") and config_dict.get("SHORTENER_API")):
         return longurl
     if attempt >= 4:
         return longurl
-    i = 0 if len(shorteners_list) == 1 else randrange(len(shorteners_list))
-    _shorten_dict = shorteners_list[i]
-    _shortener = _shorten_dict["domain"]
-    _shortener_api = _shorten_dict["api_key"]
+    if shorteners_list:
+        i = 0 if len(shorteners_list) == 1 else randrange(len(shorteners_list))
+        _shorten_dict = shorteners_list[i]
+        _shortener = _shorten_dict["domain"]
+        _shortener_api = _shorten_dict["api_key"]
+    else:
+        _shortener = config_dict["SHORTENER"]
+        _shortener_api = config_dict["SHORTENER_API"]
+    _shortener = _shortener.replace("https://", "").replace("http://", "").strip("/")
     cget = create_scraper().request
     disable_warnings()
     try:
@@ -58,17 +65,7 @@ def short_url(longurl, attempt=0):
                 "GET",
                 f"https://{_shortener}/api?api={_shortener_api}&url={quote(longurl)}",
             ).json()
-            shorted = res["shortenedUrl"]
-            if not shorted:
-                shrtco_res = cget(
-                    "GET", f"https://api.shrtco.de/v2/shorten?url={quote(longurl)}"
-                ).json()
-                shrtco_link = shrtco_res["result"]["full_short_link"]
-                res = cget(
-                    "GET",
-                    f"https://{_shortener}/api?api={_shortener_api}&url={shrtco_link}",
-                ).json()
-                shorted = res["shortenedUrl"]
+            shorted = res.get("shortenedUrl")
             if not shorted:
                 shorted = longurl
             return shorted

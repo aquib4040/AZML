@@ -816,11 +816,15 @@ async def fetch_user_dumps(user_id):
     return {}
 
 
-async def checking_access(user_id, button=None):
-    if not config_dict["TOKEN_TIMEOUT"] or bool(
-        user_id == OWNER_ID
-        or user_id in user_data
-        and user_data[user_id].get("is_sudo")
+async def checking_access(user_id, button=None, is_group=False):
+    if (
+        not config_dict.get("SHORTENER_ENABLED", True)
+        or not config_dict.get("TOKEN_TIMEOUT")
+        or bool(
+            user_id == OWNER_ID
+            or user_id in user_data
+            and user_data[user_id].get("is_sudo")
+        )
     ):
         return None, button
     user_data.setdefault(user_id, {})
@@ -844,6 +848,15 @@ async def checking_access(user_id, button=None):
         user_data[user_id].update(data)
         if button is None:
             button = ButtonMaker()
+        if config_dict.get("TOKEN_IN_PM", True) and is_group:
+            button.ubutton(
+                "Get Token in PM",
+                f"https://t.me/{bot_name}?start=req_{user_id}",
+            )
+            return (
+                f'<i>Temporary Token has been expired,</i> Click below to get your token generation link in PM.\n<b>Validity :</b> <code>{get_readable_time(config_dict["TOKEN_TIMEOUT"])}</code>',
+                button,
+            )
         encrypt_url = b64encode(f"{token}&&{user_id}".encode()).decode()
         button.ubutton(
             "Generate New Token",

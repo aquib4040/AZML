@@ -85,7 +85,9 @@ async def drive_list(_, message):
     if len(args) == 1:
         return await sendMessage(message, "<i>Send a search key along with command</i>")
     user_id = message.from_user.id
-    msg, btn = await checking_access(user_id)
+    msg, btn = await checking_access(
+        user_id, is_group=(message.chat.type != message.chat.type.PRIVATE)
+    )
     if msg is not None:
         await sendMessage(message, msg, btn.build_menu(1))
         return

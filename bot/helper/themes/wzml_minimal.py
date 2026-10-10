@@ -3,7 +3,7 @@ class WZMLStyle:
     # ----------------------
     # async def start(client, message) ---> __main__.py
     ST_BN1_NAME = "👑 ᴏᴡɴᴇʀ"
-    ST_BN1_URL = "https://t.me/Issei_Senpai_01"
+    ST_BN1_URL = "https://t.me/exe_aquib"
     ST_BN2_NAME = "📢 ᴜᴘᴅᴀᴛᴇs"
     ST_BN2_URL = "https://t.me/Canon_Bots"
     ST_MSG = """<i>This bot can mirror all your links|files|torrents to Google Drive or any rclone cloud or to telegram or to ddl servers.</i>

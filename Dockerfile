@@ -1,3 +1,4 @@
+# Base image contains: Python 3.10, libmagic, Mega SDK, UPX-compressed masked binaries, and embedded aria.sh
 FROM aquib4040/azmlv1:latest
 
 WORKDIR /usr/src/app

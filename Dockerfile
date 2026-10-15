@@ -1,26 +1,7 @@
-FROM mysterysd/wzmlx:latest
+FROM aquib4040/azmlv1:latest
 
 WORKDIR /usr/src/app
 
-# Install official standalone uv binaries so subprocess and shell can always use uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
-# Ensure uv is in PATH
-ENV PATH="/bin:/usr/local/bin:$PATH"
-
-# Avoid permission issues
-RUN chmod -R 777 /usr/src/app
-
-# Install system dependencies (important for media bots)
-RUN apt-get update && apt-get install -y \
-    mediainfo \
-    ffmpeg \
-    curl \
-    && apt-get clean
-
-# Install cloudflared for free HTTPS Quick Tunnels
-RUN curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared \
-    && chmod +x /usr/local/bin/cloudflared
 
 # Copy requirements first (better caching)
 COPY requirements.txt .

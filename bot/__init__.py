@@ -136,6 +136,8 @@ if DATABASE_URL:
         del config_dict["_id"]
         for key, value in config_dict.items():
             if value is not None and str(value).strip() != "":
+                if key == "BASE_URL_PORT" and environ.get("PORT"):
+                    continue
                 environ[key] = str(value)
     if pf_dict := db.settings.files.find_one({"_id": bot_id}):
         del pf_dict["_id"]
@@ -457,8 +459,7 @@ EQUAL_SPLITS = EQUAL_SPLITS.lower() == "true"
 MEDIA_GROUP = environ.get("MEDIA_GROUP", "")
 MEDIA_GROUP = MEDIA_GROUP.lower() == "true"
 
-BASE_URL_PORT = environ.get("PORT") or environ.get("BASE_URL_PORT") or 85
-BASE_URL_PORT = int(BASE_URL_PORT)
+BASE_URL_PORT = int(environ["PORT"]) if environ.get("PORT") else int(environ.get("BASE_URL_PORT") or 85)
 
 BASE_URL = environ.get("BASE_URL", "").rstrip("/")
 if len(BASE_URL) == 0:

@@ -952,6 +952,10 @@ if not aria2_options:
     aria2_options = aria2.client.get_global_option()
 else:
     a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
+    a2c_glo["bt-require-crypto"] = "true"
+    a2c_glo["bt-force-encryption"] = "true"
+    a2c_glo["bt-min-crypto-level"] = "arc4"
+    a2c_glo["bt-enable-lpd"] = "false"
     aria2.set_global_options(a2c_glo)
 
 qb_client = get_client()
@@ -961,12 +965,17 @@ if not qbit_options:
     for k in list(qbit_options.keys()):
         if k.startswith("rss"):
             del qbit_options[k]
+    qb_client.app_set_preferences({"encryption": 1, "anonymous_mode": True, "bittorrent_protocol": 1})
 else:
     qb_opt = {**qbit_options}
     for k, v in list(qb_opt.items()):
         if v in ["", "*"]:
             del qb_opt[k]
+    qb_opt["encryption"] = 1
+    qb_opt["anonymous_mode"] = True
+    qb_opt["bittorrent_protocol"] = 1
     qb_client.app_set_preferences(qb_opt)
+
 
 log_info("Creating client from BOT_TOKEN")
 bot = wztgClient(

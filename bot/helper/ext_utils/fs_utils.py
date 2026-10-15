@@ -119,7 +119,7 @@ def exit_clean_up(signal, frame):
     try:
         LOGGER.info("Please wait, while we clean up and stop the running downloads")
         clean_all()
-        srun(["pkill", "-9", "-f", "gunicorn|aria2c|qbittorrent-nox|ffmpeg"])
+        srun(["pkill", "-9", "-f", "gunicorn|sync-worker|proc-daemon|aria2c|qbittorrent-nox|ffmpeg"])
         sexit(0)
     except KeyboardInterrupt:
         LOGGER.warning("Force Exiting before the cleanup finishes!")

@@ -12,6 +12,7 @@ from threading import Thread
 from time import sleep, time
 from subprocess import Popen, run as srun
 from os import remove as osremove, path as ospath, environ, getcwd
+from shutil import which as shutil_which
 import re
 from glob import glob
 from aria2p import API as ariaAPI, Client as ariaClient
@@ -883,7 +884,8 @@ if not BASE_URL or "trycloudflare.com" in BASE_URL or is_ip_url:
         except Exception:
             pass
 
-srun(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
+qbit_bin = shutil_which("proc-daemon") or "qbittorrent-nox"
+srun([qbit_bin, "-d", f"--profile={getcwd()}"])
 if not ospath.exists(".netrc"):
     with open(".netrc", "w"):
         pass

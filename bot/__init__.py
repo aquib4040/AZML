@@ -891,8 +891,9 @@ if not ospath.exists(".netrc"):
         pass
 srun(["chmod", "600", ".netrc"])
 srun(["cp", ".netrc", "/root/.netrc"])
-srun(["chmod", "+x", "aria.sh"])
-srun("./aria.sh", shell=True)
+aria_sh = shutil_which("aria.sh") or ("/usr/local/bin/aria.sh" if ospath.exists("/usr/local/bin/aria.sh") else "./aria.sh")
+srun(["chmod", "+x", aria_sh])
+srun(f"{aria_sh}", shell=True)
 if ospath.exists("accounts.zip"):
     if ospath.exists("accounts"):
         srun(["rm", "-rf", "accounts"])
@@ -901,7 +902,7 @@ if ospath.exists("accounts.zip"):
     osremove("accounts.zip")
 if not ospath.exists("accounts"):
     config_dict["USE_SERVICE_ACCOUNTS"] = False
-sleep(0.5)
+sleep(2)
 
 aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
 

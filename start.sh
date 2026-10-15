@@ -18,12 +18,19 @@ TELEGRAM_API=${TELEGRAM_API}
 TELEGRAM_HASH=${TELEGRAM_HASH}
 DATABASE_URL=${DATABASE_URL}
 EOF
+  if [ -n "$BASE_URL" ]; then
+    echo "BASE_URL=${BASE_URL}" >> .env
+  fi
 fi
 
 if [ -f config.env ]; then
   set -a
   source config.env 2>/dev/null || true
   set +a
+fi
+
+if [ -n "$HEROKU_APP_NAME" ] && [ -z "$BASE_URL" ]; then
+  export BASE_URL="https://${HEROKU_APP_NAME}.herokuapp.com"
 fi
 
 # Always prioritize dynamic port given by Heroku / cloud environments over hardcoded ports

@@ -139,6 +139,8 @@ if DATABASE_URL:
             if value is not None and str(value).strip() != "":
                 if key == "BASE_URL_PORT" and environ.get("PORT"):
                     continue
+                if key == "BASE_URL" and environ.get("BASE_URL"):
+                    continue
                 environ[key] = str(value)
     if pf_dict := db.settings.files.find_one({"_id": bot_id}):
         del pf_dict["_id"]

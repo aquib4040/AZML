@@ -62,6 +62,8 @@ for _sess in glob("*.session*"):
     except Exception:
         pass
 
+if ospath.exists(".env"):
+    load_dotenv(".env", override=False)
 if ospath.exists("config.env"):
     load_dotenv("config.env", override=False)
 
@@ -113,7 +115,12 @@ if len(DATABASE_URL) == 0:
 if DATABASE_URL:
     conn = MongoClient(DATABASE_URL)
     db = conn.canonleech
-    current_config = dict(dotenv_values("config.env"))
+    current_config = dict(dotenv_values("config.env")) if ospath.exists("config.env") else {}
+    if ospath.exists(".env"):
+        current_config.update({k: v for k, v in dotenv_values(".env").items() if v is not None and str(v).strip() != ""})
+    for k in ["BOT_TOKEN", "OWNER_ID", "TELEGRAM_API", "TELEGRAM_HASH", "DATABASE_URL"]:
+        if environ.get(k):
+            current_config[k] = environ[k]
     old_config = db.settings.deployConfig.find_one({"_id": bot_id})
     if old_config is None:
         db.settings.deployConfig.replace_one(
@@ -450,8 +457,8 @@ EQUAL_SPLITS = EQUAL_SPLITS.lower() == "true"
 MEDIA_GROUP = environ.get("MEDIA_GROUP", "")
 MEDIA_GROUP = MEDIA_GROUP.lower() == "true"
 
-BASE_URL_PORT = environ.get("BASE_URL_PORT", environ.get("PORT", ""))
-BASE_URL_PORT = 85 if len(str(BASE_URL_PORT)) == 0 else int(BASE_URL_PORT)
+BASE_URL_PORT = environ.get("PORT") or environ.get("BASE_URL_PORT") or 85
+BASE_URL_PORT = int(BASE_URL_PORT)
 
 BASE_URL = environ.get("BASE_URL", "").rstrip("/")
 if len(BASE_URL) == 0:

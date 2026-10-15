@@ -36,6 +36,8 @@ basicConfig(
     level=INFO,
 )
 
+if ospath.exists(".env"):
+    load_dotenv(".env", override=False)
 if ospath.exists("config.env"):
     load_dotenv("config.env", override=False)
 

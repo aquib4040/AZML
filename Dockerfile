@@ -6,9 +6,8 @@ WORKDIR /usr/src/app
 # Copy requirements first (better caching)
 COPY requirements.txt .
 
-# Install uv for blazingly fast Python package installation
-RUN pip3 install --no-cache-dir uv \
-    && uv pip install --system --break-system-packages --upgrade pip setuptools wheel \
+# Install dependencies using standalone uv
+RUN uv pip install --system --break-system-packages --upgrade pip setuptools wheel \
     && uv pip install --system --break-system-packages "setuptools_scm<8" \
     && uv pip install --system --break-system-packages vcs_versioning \
     && uv pip install --system --break-system-packages --no-cache -r requirements.txt \

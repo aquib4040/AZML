@@ -891,7 +891,7 @@ if not ospath.exists(".netrc"):
         pass
 srun(["chmod", "600", ".netrc"])
 srun(["cp", ".netrc", "/root/.netrc"])
-aria_sh = shutil_which("aria.sh") or ("/usr/local/bin/aria.sh" if ospath.exists("/usr/local/bin/aria.sh") else "./aria.sh")
+aria_sh = "./aria.sh" if ospath.exists("./aria.sh") else (shutil_which("aria.sh") or "/usr/local/bin/aria.sh")
 srun(["chmod", "+x", aria_sh])
 srun(f"{aria_sh}", shell=True)
 if ospath.exists("accounts.zip"):
@@ -918,16 +918,11 @@ def get_client():
 
 def aria2c_init():
     try:
-        log_info("Initializing Aria2c")
-        link = "https://linuxmint.com/torrents/lmde-5-cinnamon-64bit.iso.torrent"
-        dire = DOWNLOAD_DIR.rstrip("/")
-        aria2.add_uris([link], {"dir": dire})
-        sleep(3)
-        downloads = aria2.get_downloads()
-        sleep(10)
-        aria2.remove(downloads, force=True, files=True, clean=True)
+        log_info("Initializing Aria2c...")
+        version = aria2.client.get_version()
+        log_info(f"Aria2c ready (version: {version.get('version', 'unknown')})")
     except Exception as e:
-        log_error(f"Aria2c initializing error: {e}")
+        log_error(f"Aria2c initialization error: {e}")
 
 
 Thread(target=aria2c_init).start()

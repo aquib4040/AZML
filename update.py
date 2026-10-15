@@ -183,14 +183,8 @@ if UPGRADE_PACKAGES.lower() == "true":
     uv_bin = get_uv_path()
     scall(f'"{uv_bin}" pip install --system --break-system-packages ' + " ".join(packages), shell=True)
 
-UPSTREAM_REPO = environ.get("UPSTREAM_REPO", "")
-if "WZMLakane" in UPSTREAM_REPO or len(UPSTREAM_REPO) == 0:
-    UPSTREAM_REPO = "https://github.com/aquib4040/AZML"
-    UPSTREAM_BRANCH = "main"
-else:
-    UPSTREAM_BRANCH = environ.get("UPSTREAM_BRANCH", "main")
-    if len(UPSTREAM_BRANCH) == 0:
-        UPSTREAM_BRANCH = "main"
+UPSTREAM_REPO = environ.get("UPSTREAM_REPO", "").strip() or "https://github.com/aquib4040/AZML"
+UPSTREAM_BRANCH = environ.get("UPSTREAM_BRANCH", "").strip() or "test-hk"
 
 req_hash_before = get_file_hash("requirements.txt")
 
@@ -206,7 +200,7 @@ if UPSTREAM_REPO is not None:
     update = srun(
         [
             f"git init -q \
-                     && git config --global user.email mdaquibjawed1106@gmial.com \
+                     && git config --global user.email mdaquibjawed1106@gmail.com \
                      && git config --global user.name aquib4040 \
                      && git add . \
                      && git commit -sm update -q \

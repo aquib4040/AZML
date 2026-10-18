@@ -32,12 +32,12 @@
 
 <!-- SPEEDTEST_START -->
 ### ⚡ Telegram Speed Benchmark (1.91 GB)
-*Bot DC: **DC1** | Owner DC: **DC1** | GitHub Action Server: **United States (Phoenix)** | Updated: 2026-10-11 02:35:38 UTC*
+*Bot DC: **DC1** | Owner DC: **DC1** | GitHub Action Server: **United States (Boydton)** | Updated: 2026-10-18 01:52:23 UTC*
 
 | Benchmark | Avg Speed | Peak Speed |
 |---|---|---|
-| ⬇️ Telegram Download (1.91 GB) | 14.83 MB/S | 31.61 MB/S |
-| ⬆️ Telegram Upload (1.91 GB) | 15.28 MB/S | 52.22 MB/S |
+| ⬇️ Telegram Download (1.91 GB) | 15.92 MB/S | 16.01 MB/S |
+| ⬆️ Telegram Upload (1.91 GB) | 16.11 MB/S | 66.34 MB/S |
 <!-- SPEEDTEST_END -->
 
 ## Features

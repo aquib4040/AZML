@@ -4,6 +4,7 @@ from pyrogram.enums import ChatType
 
 from bot import user_data, OWNER_ID
 from bot.helper.telegram_helper.message_utils import chat_info
+from bot.helper.ext_utils.bot_utils import is_premium_user
 
 
 class CustomFilters:
@@ -27,6 +28,7 @@ class CustomFilters:
                     or user_data[uid].get("is_sudo", False)
                 )
             )
+            or is_premium_user(uid)
         ):
             return True
 
@@ -70,6 +72,7 @@ class CustomFilters:
                     or user_data[uid].get("is_sudo", False)
                 )
             )
+            or is_premium_user(uid)
             or (chat_id in user_data and user_data[chat_id].get("is_auth", False))
         ):
             isExists = True

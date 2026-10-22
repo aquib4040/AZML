@@ -43,6 +43,7 @@ from .helper.ext_utils.bot_utils import (
     set_commands,
     update_user_ldata,
     get_stats,
+    is_premium_user,
 )
 from .helper.ext_utils.db_handler import DbManger
 from .helper.telegram_helper.bot_commands import BotCommands
@@ -116,6 +117,16 @@ async def start(client, message):
             target_uid = message.command[1].split("_", 1)[1]
             if not target_uid.isdigit() or int(target_uid) != userid:
                 return await sendMessage(message, BotTheme("OWN_TOKEN_GENERATE"))
+        if is_premium_user(userid):
+            rem_time = (
+                f"\n<b>Remaining Time:</b> <code>{get_readable_time(user_data[userid]['expiry_time'] - time())}</code>"
+                if user_data.get(userid, {}).get("expiry_time")
+                else ""
+            )
+            return await sendMessage(
+                message,
+                f"<i>You are a Premium User! Token verification is not required.</i>{rem_time}",
+            )
         if not config_dict.get("SHORTENER_ENABLED", True) or not config_dict.get("TOKEN_TIMEOUT"):
             return await sendMessage(message, "<i>Token verification is currently disabled!</i>")
         user_data.setdefault(userid, {})
@@ -154,6 +165,11 @@ async def start(client, message):
         and config_dict.get("TOKEN_TIMEOUT")
     ):
         userid = message.from_user.id
+        if is_premium_user(userid):
+            return await sendMessage(
+                message,
+                "<i>You are a Premium User! Token verification is not required.</i>",
+            )
         encrypted_url = message.command[1]
         input_token, pre_uid = (b64decode(encrypted_url.encode()).decode()).split("&&")
         if int(pre_uid) != userid:

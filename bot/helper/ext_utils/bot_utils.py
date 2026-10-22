@@ -419,7 +419,7 @@ def get_readable_time(seconds):
         if seconds >= period_seconds:
             period_value, seconds = divmod(seconds, period_seconds)
             result += f"{int(period_value)}{period_name}"
-    return result
+    return result if result else "0s"
 
 
 def is_magnet(url):
@@ -533,6 +533,8 @@ def update_user_ldata(id_, key=None, value=None):
         "is_blacklist",
         "token",
         "time",
+        "is_premium",
+        "expiry_time",
     ]
     if key is None and value is None:
         if id_ in user_data:
@@ -816,14 +818,38 @@ async def fetch_user_dumps(user_id):
     return {}
 
 
+def is_premium_user(user_id):
+    if not user_id:
+        return False
+    try:
+        uid = int(user_id)
+    except (ValueError, TypeError):
+        return False
+    user_dict = user_data.get(uid, {})
+    if not user_dict.get("is_premium"):
+        return False
+    expiry = user_dict.get("expiry_time")
+    if expiry:
+        try:
+            exp_val = float(expiry)
+        except (ValueError, TypeError):
+            exp_val = 0
+        if exp_val > 0:
+            if time() > exp_val:
+                user_dict["is_premium"] = False
+                return False
+            return True
+    return bool(user_dict.get("is_premium"))
+
+
 async def checking_access(user_id, button=None, is_group=False):
     if (
         not config_dict.get("SHORTENER_ENABLED", True)
         or not config_dict.get("TOKEN_TIMEOUT")
         or bool(
             user_id == OWNER_ID
-            or user_id in user_data
-            and user_data[user_id].get("is_sudo")
+            or (user_id in user_data and user_data[user_id].get("is_sudo"))
+            or is_premium_user(user_id)
         )
     ):
         return None, button

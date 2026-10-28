@@ -210,6 +210,15 @@ def get_all_versions():
     except FileNotFoundError:
         vr = ""
     try:
+        result = srun(["hatchzip", "--version"], capture_output=True, text=True)
+        vh = result.stdout.strip().split()[-1]
+    except Exception:
+        try:
+            result = srun(["hz", "--version"], capture_output=True, text=True)
+            vh = result.stdout.strip().split()[-1]
+        except Exception:
+            vh = ""
+    try:
         vpy = get_distribution("pyrogram").version
     except DistributionNotFound:
         try:
@@ -217,6 +226,7 @@ def get_all_versions():
         except DistributionNotFound:
             vpy = "2.xx.xx"
     bot_cache["eng_versions"] = {
+        "hatchzip": vh,
         "p7zip": vp,
         "ffmpeg": vf,
         "rclone": vr,
@@ -242,7 +252,7 @@ class EngineStatus:
         self.STATUS_QB = f"qBit {version_cache['qbit']}"
         self.STATUS_TG = f"PyroMulti v{version_cache['pyro']}"
         self.STATUS_YT = f"yt-dlp v{version_cache['ytdlp']}"
-        self.STATUS_EXT = "pExtract v2"
+        self.STATUS_EXT = f"HatchZip v{version_cache['hatchzip']}" if version_cache.get("hatchzip") else (f"p7zip v{version_cache['p7zip']}" if version_cache.get("p7zip") else "pExtract v2")
         self.STATUS_SPLIT_MERGE = f"ffmpeg v{version_cache['ffmpeg']}"
         self.STATUS_ZIP = f"p7zip v{version_cache['p7zip']}"
         self.STATUS_QUEUE = "Sleep v0"

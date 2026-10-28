@@ -36,7 +36,7 @@ class ExtractStatus:
             return 0
 
     def progress(self):
-        return f"{round(self.progress_raw(), 2)}%"
+        return f"{min(100.0, round(self.progress_raw(), 2))}%"
 
     def speed(self):
         return f"{get_readable_file_size(self.speed_raw())}/s"
@@ -49,7 +49,10 @@ class ExtractStatus:
 
     def eta(self):
         try:
-            seconds = (self.__size - self.processed_raw()) / self.speed_raw()
+            rem = self.__size - self.processed_raw()
+            if rem <= 0:
+                return "0s"
+            seconds = rem / self.speed_raw()
             return get_readable_time(seconds)
         except Exception:
             return "-"
@@ -63,8 +66,10 @@ class ExtractStatus:
     def processed_raw(self):
         if self.__listener.newDir:
             return async_to_sync(get_path_size, self.__listener.newDir)
+        elif getattr(self.__listener, "extract_path", "") and getattr(self.__listener, "extract_path", "") != self.__listener.dir:
+            return async_to_sync(get_path_size, self.__listener.extract_path)
         else:
-            return async_to_sync(get_path_size, self.__listener.dir) - self.__size
+            return max(0, async_to_sync(get_path_size, self.__listener.dir) - self.__size)
 
     def download(self):
         return self

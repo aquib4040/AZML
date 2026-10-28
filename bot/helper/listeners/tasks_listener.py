@@ -10,6 +10,7 @@ from aiofiles.os import path as aiopath, remove as aioremove, listdir, makedirs
 from os import walk, path as ospath
 from html import escape
 from aioshutil import move
+from shutil import which
 from asyncio import create_subprocess_exec, sleep, Event
 from pyrogram.enums import ChatType
 
@@ -136,6 +137,7 @@ class MirrorLeechListener:
         self.tag = tag
         self.seed = seed
         self.newDir = ""
+        self.extract_path = ""
         self.dir = f"{DOWNLOAD_DIR}{self.uid}"
         self.select = select
         self.isSuperGroup = message.chat.type in [ChatType.SUPERGROUP, ChatType.CHANNEL]
@@ -248,6 +250,76 @@ class MirrorLeechListener:
                 self.message.text,
             )
 
+    async def _extract_archive(self, src_path, dest_path, pswd=""):
+        hatchzip_bin = which("hatchzip") or which("hz")
+        if hatchzip_bin:
+            hz_cmd = [hatchzip_bin, "extract", src_path, "-o", dest_path, "-y", "--replace"]
+            if pswd:
+                hz_cmd.extend(["-p", pswd])
+            if self.seed:
+                hz_cmd.append("--keep-archive")
+
+            if self.suproc == "cancelled":
+                return False
+
+            LOGGER.info(f"Attempting HatchZip in-place extraction: {src_path}")
+            try:
+                self.suproc = await create_subprocess_exec(*hz_cmd)
+                code = await self.suproc.wait()
+                if code == 0:
+                    LOGGER.info(f"HatchZip extraction successful for: {src_path}")
+                    return True
+                elif code in (-9, -15, 130) or self.suproc == "cancelled":
+                    LOGGER.info(f"Extraction cancelled by user: {src_path}")
+                    return False
+                else:
+                    LOGGER.warning(
+                        f"HatchZip failed with exit code {code} for: {src_path}. "
+                        f"Attempting to restore archive and falling back to 7z..."
+                    )
+                    try:
+                        restore_proc = await create_subprocess_exec(
+                            hatchzip_bin, "restore", src_path, "-o", dest_path, "-q"
+                        )
+                        await restore_proc.wait()
+                    except Exception as rest_err:
+                        LOGGER.warning(f"HatchZip restore error (non-fatal): {rest_err}")
+            except Exception as e:
+                LOGGER.warning(f"HatchZip execution error ({e}), falling back to 7z...")
+
+        if self.suproc == "cancelled" or (
+            self.suproc is not None and getattr(self.suproc, "returncode", None) in (-9, -15, 130)
+        ):
+            return False
+
+        LOGGER.info(f"Falling back to 7z extraction for: {src_path}")
+        cmd = [
+            "7z",
+            "x",
+            f"-p{pswd}",
+            src_path,
+            f"-o{dest_path}",
+            "-aot",
+            "-xr!@PaxHeader",
+        ]
+        if not pswd:
+            del cmd[2]
+
+        if self.suproc == "cancelled":
+            return False
+
+        self.suproc = await create_subprocess_exec(*cmd)
+        code = await self.suproc.wait()
+        if code in (-9, -15, 130) or self.suproc == "cancelled":
+            LOGGER.info(f"7z extraction cancelled by user: {src_path}")
+            return False
+        elif code == 0:
+            LOGGER.info(f"7z extraction successful for: {src_path}")
+            return True
+        else:
+            LOGGER.error(f"7z extraction failed with code {code} for: {src_path}")
+            return False
+
     async def onDownloadComplete(self):
         multi_links = False
         while True:
@@ -349,6 +421,7 @@ class MirrorLeechListener:
                         up_path = f"{self.newDir}/{name}"
                     else:
                         up_path = dl_path
+                    self.extract_path = up_path
                     for dirpath, _, files in await sync_to_async(
                         walk, dl_path, topdown=False
                     ):
@@ -364,67 +437,50 @@ class MirrorLeechListener:
                                     if self.seed
                                     else dirpath
                                 )
-                                cmd = [
-                                    "7z",
-                                    "x",
-                                    f"-p{pswd}",
-                                    f_path,
-                                    f"-o{t_path}",
-                                    "-aot",
-                                    "-xr!@PaxHeader",
-                                ]
-                                if not pswd:
-                                    del cmd[2]
+                                success = await self._extract_archive(f_path, t_path, pswd)
                                 if (
                                     self.suproc == "cancelled"
-                                    or self.suproc is not None
-                                    and self.suproc.returncode == -9
+                                    or (self.suproc is not None and getattr(self.suproc, "returncode", None) in (-9, -15, 130))
                                 ):
                                     return
-                                self.suproc = await create_subprocess_exec(*cmd)
-                                code = await self.suproc.wait()
-                                if code == -9:
-                                    return
-                                elif code != 0:
-                                    LOGGER.error("Unable to extract archive splits!")
+                                elif not success:
+                                    LOGGER.error(f"Unable to extract archive: {file_}!")
                         if (
                             not self.seed
                             and self.suproc is not None
-                            and self.suproc.returncode == 0
+                            and getattr(self.suproc, "returncode", None) == 0
                         ):
                             for file_ in files:
                                 if is_archive_split(file_) or is_archive(file_):
                                     del_path = ospath.join(dirpath, file_)
                                     try:
-                                        await aioremove(del_path)
+                                        if await aiopath.exists(del_path):
+                                            await aioremove(del_path)
+                                        for hz_meta in (f"{del_path}.hatchzip", f"{del_path}.hatchzip-tail"):
+                                            if await aiopath.exists(hz_meta):
+                                                await aioremove(hz_meta)
                                     except Exception:
                                         return
                 else:
                     if self.seed:
                         self.newDir = f"{self.dir}10000"
                         up_path = up_path.replace(self.dir, self.newDir)
-                    cmd = [
-                        "7z",
-                        "x",
-                        f"-p{pswd}",
-                        dl_path,
-                        f"-o{up_path}",
-                        "-aot",
-                        "-xr!@PaxHeader",
-                    ]
-                    if not pswd:
-                        del cmd[2]
-                    if self.suproc == "cancelled":
+                    self.extract_path = up_path
+                    success = await self._extract_archive(dl_path, up_path, pswd)
+                    if (
+                        self.suproc == "cancelled"
+                        or (self.suproc is not None and getattr(self.suproc, "returncode", None) in (-9, -15, 130))
+                    ):
                         return
-                    self.suproc = await create_subprocess_exec(*cmd)
-                    code = await self.suproc.wait()
-                    if code == -9:
-                        return
-                    elif code == 0:
+                    elif success:
                         LOGGER.info(f"Extracted Path: {up_path}")
                         if not self.seed:
                             try:
-                                await aioremove(dl_path)
+                                if await aiopath.exists(dl_path):
+                                    await aioremove(dl_path)
+                                for hz_meta in (f"{dl_path}.hatchzip", f"{dl_path}.hatchzip-tail"):
+                                    if await aiopath.exists(hz_meta):
+                                        await aioremove(hz_meta)
                             except Exception:
                                 return
                     else:

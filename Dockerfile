@@ -22,6 +22,23 @@ RUN apt-get update && apt-get install -y \
 RUN curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared \
     && chmod +x /usr/local/bin/cloudflared
 
+# Install HatchZip for in-place, space-saving archive extraction
+RUN (curl -fsSL https://raw.githubusercontent.com/xevrion/hatchzip/main/install.sh | HATCHZIP_INSTALL_DIR=/usr/local/bin sh) \
+    || ( \
+        ARCH=$(uname -m) && \
+        case "$ARCH" in \
+            x86_64|amd64) HZ_ARCH="x86_64" ;; \
+            aarch64|arm64) HZ_ARCH="aarch64" ;; \
+            *) HZ_ARCH="x86_64" ;; \
+        esac && \
+        curl -fsSL "https://github.com/xevrion/hatchzip/releases/latest/download/hatchzip-${HZ_ARCH}-linux.tar.gz" -o /tmp/hatchzip.tar.gz && \
+        tar -xzf /tmp/hatchzip.tar.gz -C /tmp && \
+        cp "/tmp/hatchzip-${HZ_ARCH}-linux/hatchzip" /usr/local/bin/hatchzip && \
+        chmod +x /usr/local/bin/hatchzip && \
+        ln -sf /usr/local/bin/hatchzip /usr/local/bin/hz && \
+        rm -rf /tmp/hatchzip* \
+    ) && (hatchzip --version || true)
+
 # Copy requirements first (better caching)
 COPY requirements.txt .
 

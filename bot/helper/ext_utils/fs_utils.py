@@ -167,6 +167,10 @@ async def count_files_and_folders(path):
 
 
 def get_base_name(orig_path):
+    if is_first_archive_split(orig_path):
+        match = re_search(r"(\.|_)(part0*1\.rar|7z\.0*1|zip\.0*1)$", orig_path, flags=I)
+        if match:
+            return orig_path[:match.start()]
     extension = next((ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)), "")
     if extension != "":
         return re_split(f"{extension}$", orig_path, maxsplit=1, flags=I)[0]
@@ -182,7 +186,7 @@ def get_mime_type(file_path):
 
 
 async def fix_archive_extension(file_path):
-    if is_archive(file_path):
+    if is_archive(file_path) or is_first_archive_split(file_path) or is_archive_split(file_path):
         return file_path
     ext = ""
     mime_type = await sync_to_async(get_mime_type, file_path)
